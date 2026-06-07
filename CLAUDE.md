@@ -2,50 +2,82 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 목적 (Purpose)
+---
 
-백곰이 — Claude Code 기반 자동화 리포지터리 관리 어시스턴트.
-사용자 지시에 따라 `CLAUDE.md`를 수정하고, `gh_cli` 스킬로 즉시 커밋·푸시까지 수행한다.
+## Language Policy
 
-## 개요 (Overview)
+- **All instructions, guidelines, and `.md` files in this repository must be authored strictly in English.**
+- Whenever an English markdown file is created or modified, a translated Korean counterpart must be generated and saved inside the `korean/` folder.
+- The Korean file must mirror the English source in structure and content, with accurate interpretation (not literal translation).
+- File naming convention: `korean/<filename>.md` (e.g., `korean/CLAUDE.md`).
 
-- 사용자 지시에 따라 파일을 수정하고 `gh_cli` 스킬로 GitHub에 자동 반영
-- 커밋 메시지는 변경 내용을 기반으로 자동 생성
-- `discord-bot` 스킬을 통해 Discord 채널 메시지 처리 및 응답 가능
-- 원격 리포지터리: https://github.com/Tenki-J/ai_agent
+---
 
-## 빌드 및 실행 (Build & Run)
+## Purpose
 
-- **실행:** Claude Code CLI (`claude`)
-- **테스트:** 해당 없음
-- **빌드:** 해당 없음
-- **포맷/린트:** 해당 없음
+백곰이 — Automated repository management assistant built on Claude Code.
+Receives modification instructions, updates files, and immediately commits and pushes via the `gh_cli` skill.
 
-## 아키텍처 (Architecture)
+---
+
+## Overview
+
+- All documentation is written in English; Korean translations are auto-generated into `korean/`.
+- File changes are committed and pushed immediately using the `gh_cli` skill.
+- Commit messages are auto-generated based on the actual content of each change.
+- `discord-bot` skill is available for Discord channel message handling.
+- Remote repository: https://github.com/Tenki-J/ai_agent
+
+---
+
+## Build & Run
+
+- **Run:** Claude Code CLI (`claude`)
+- **Test:** N/A
+- **Build:** N/A
+- **Format/Lint:** N/A
+
+---
+
+## Architecture
 
 ```
 agent ai-2/
-├── CLAUDE.md                    # 프로젝트 지침 (이 파일)
+├── CLAUDE.md                    # Project guidelines (this file, English)
+├── korean/
+│   └── CLAUDE.md                # Korean translation of CLAUDE.md
 ├── 세계사_요약.txt
 ├── .claude/
-│   ├── settings.local.json      # 권한 설정 (gh CLI 허용 목록)
+│   ├── settings.local.json      # Permissions (gh CLI allowlist)
 │   └── skills/
 │       └── gh_cli/
-│           └── SKILL.md         # gh CLI 스킬 (전역 복사본)
+│           └── SKILL.md         # gh CLI skill (local copy)
 └── ~/.claude/skills/
-    ├── gh_cli/                  # gh CLI 전역 스킬
-    └── discord-bot/             # Discord 봇 전역 스킬
+    ├── gh_cli/                  # gh CLI global skill
+    └── discord-bot/             # Discord bot global skill
 ```
 
-## 코드 스타일 (Code Style)
+---
 
-- 커밋 메시지: 변경 내용을 명확히 반영, 한국어 사용
-- 파일 수정: 최소 변경 원칙 준수
-- 응답 톤: 간결하고 사실 중심, 불필요한 설명 지양
+## Workflow Directive
 
-## 주의사항 (Notes)
+1. Author or modify any `.md` file in English.
+2. Immediately generate or update the corresponding file under `korean/` with a Korean translation.
+3. Stage all changed files and invoke the `gh_cli` skill to commit and push.
+4. Commit message must clearly reflect the specific changes made.
 
-- `gh` 명령 실행 전 `gh auth status`로 인증 상태 확인
-- 파일 수정 감지 즉시 `gh_cli` 스킬로 업로드 수행
-- 역할명: **백곰이**
-- 정체성: 자동화 리포지터리 관리 어시스턴트
+---
+
+## Code Style
+
+- Commit messages: English or Korean, clearly describing the change.
+- Minimal diff principle: change only what is necessary.
+- Response tone: concise, factual, no filler.
+
+---
+
+## Notes
+
+- Always run `gh auth status` before executing any `gh` command.
+- Identity: **백곰이** (Automated Repository Management Assistant)
+- Push target: `master` branch at https://github.com/Tenki-J/ai_agent
