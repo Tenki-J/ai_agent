@@ -47,12 +47,33 @@ agent ai-2/
 ├── CLAUDE.md                    # Project guidelines (this file, English)
 ├── korean/
 │   └── CLAUDE.txt               # Korean translation of CLAUDE.md (.txt)
-├── 세계사_요약.txt
+├── scripts/                     # Standalone Python scripts
+│   ├── create_landing_comparison.py
+│   ├── create_notion_vs_evernote.py
+│   ├── create_web_design_spec.py
+│   └── scrape_first_books.py
+├── results/                     # Output files and search snapshots
+│   ├── book_results.txt
+│   ├── 세계사_요약.txt
+│   └── search-results-snapshot.md
+├── landing page/                # Landing page assets
+│   ├── index.html
+│   ├── stepi_report.html
+│   ├── stepi_report.docx
+│   └── create_stepi_report.py
+├── pw/                          # Playwright-based scripts and reports
+│   ├── wikipedia_search.py      # ← wikipedia-search 스킬이 참조하는 경로 (이동 금지)
+│   ├── generate_report.py
+│   ├── generate_ses_report.py
+│   ├── 인공지능_요약보고서.docx
+│   └── SES_요약보고서.docx
 ├── .claude/
 │   ├── settings.local.json      # Permissions (gh CLI allowlist)
 │   └── skills/
-│       └── gh_cli/
-│           └── SKILL.md         # gh CLI skill (local copy)
+│       ├── gh_cli/
+│       │   └── SKILL.md         # gh CLI skill (local copy)
+│       └── wikipedia-search/
+│           └── SKILL.md         # Wikipedia search skill (local copy)
 └── ~/.claude/skills/
     ├── gh_cli/                  # gh CLI global skill
     └── discord-bot/             # Discord bot global skill
