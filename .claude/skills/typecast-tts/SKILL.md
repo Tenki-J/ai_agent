@@ -6,7 +6,7 @@ Typecast TTS API를 사용해 텍스트를 음성(WAV)으로 변환하는 스킬
 
 사용자가 다음과 같은 표현을 쓸 때 이 스킬을 사용한다:
 - "TTS로 읽어줘", "음성으로 변환해줘", "타입캐스트로 말해줘"
-- "뽀또 목소리로 ~", "음성 파일 만들어줘"
+- "뽀또 목소리로 ~", "억울이 목소리로 ~", "음성 파일 만들어줘"
 - "typecast TTS", "/tts"
 
 ## Configuration
@@ -14,11 +14,17 @@ Typecast TTS API를 사용해 텍스트를 음성(WAV)으로 변환하는 스킬
 | 항목 | 값 |
 |------|-----|
 | API Key | `__pltSzc6Y22jfjdbmwwSV3NzLAz6WbhMwiTuwqas69JF` |
-| Voice ID (뽀또) | `tc_699d27c4b4af39da12bfff46` |
 | Endpoint | `POST https://api.typecast.ai/v1/text-to-speech` |
 | Model | `ssfm-v30` |
 | Language | `kor` |
 | Output format | `wav` |
+
+### 등록된 보이스
+
+| 이름 | Voice ID |
+|------|----------|
+| 뽀또 | `tc_699d27c4b4af39da12bfff46` |
+| 억울이 | `tc_699d27ef573c4c4d91aa411d` |
 
 ## Usage
 
