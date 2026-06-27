@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Agent 02 — 문서 자동화 Skill 실습</title>
+  <style>
+    :root {
+      --bg: #f8f9fa;
+      --sidebar-bg: #1e1e2e;
+      --sidebar-text: #cdd6f4;
+      --sidebar-active: #89b4fa;
+      --sidebar-hover: #313244;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --accent: #3b82f6;
+      --accent-light: #eff6ff;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --tag-basic: #10b981;
+      --tag-adv: #8b5cf6;
+      --tag-setup: #f59e0b;
+      --tag-practice: #ef4444;
+      --success: #22c55e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── 사이드바 ── */
+    #sidebar {
+      width: 260px;
+      min-width: 260px;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    #sidebar .logo {
+      padding: 24px 20px 16px;
+      border-bottom: 1px solid #313244;
+    }
+    #sidebar .logo h1 { font-size: 1rem; font-weight: 700; color: #89b4fa; }
+    #sidebar .logo p { font-size: 0.72rem; color: #6c7086; margin-top: 4px; }
+
+    #sidebar nav { padding: 12px 0; flex: 1; }
+
+    #sidebar nav a {
+      display: block;
+      padding: 9px 20px;
+      font-size: 0.82rem;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      transition: background 0.15s;
+      border-left: 3px solid transparent;
+    }
+    #sidebar nav a:hover { background: var(--sidebar-hover); }
+    #sidebar nav a.active {
+      background: #313244;
+      border-left-color: var(--sidebar-active);
+      color: var(--sidebar-active);
+      font-weight: 600;
+    }
+
+    #sidebar nav .section-label {
+      padding: 12px 20px 4px;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #6c7086;
+    }
+
+    /* ── 메인 콘텐츠 ── */
+    #main {
+      flex: 1;
+      padding: 40px 48px;
+      max-width: 960px;
+    }
+
+    /* 상단 배너 */
+    .page-header {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+      color: #fff;
+      border-radius: 12px;
+      padding: 32px 36px;
+      margin-bottom: 36px;
+    }
+    .page-header h1 { font-size: 1.6rem; font-weight: 700; }
+    .page-header p { font-size: 0.9rem; opacity: 0.85; margin-top: 6px; }
+
+    /* 빠른 실행 배너 */
+    .quick-cmd {
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+    .quick-cmd span { font-size: 0.75rem; color: #94a3b8; white-space: nowrap; }
+    .quick-cmd code {
+      font-family: 'Consolas', monospace;
+      font-size: 0.85rem;
+      color: #7dd3fc;
+      flex: 1;
+    }
+
+    /* 섹션 */
+    .week-section {
+      margin-bottom: 60px;
+      scroll-margin-top: 24px;
+    }
+
+    .week-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .week-title h2 { font-size: 1.25rem; font-weight: 700; }
+
+    .badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge-basic { background: #d1fae5; color: #065f46; }
+    .badge-adv   { background: #ede9fe; color: #5b21b6; }
+
+    /* 카드 */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px 28px;
+      margin-bottom: 20px;
+    }
+    .card h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+      color: var(--accent);
+    }
+    .card h4 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin: 16px 0 8px;
+      color: #475569;
+    }
+    .card p, .card li {
+      font-size: 0.855rem;
+      line-height: 1.75;
+      color: var(--text);
+    }
+    .card ul, .card ol {
+      padding-left: 20px;
+      margin: 8px 0;
+    }
+    .card li { margin-bottom: 4px; }
+
+    /* 코드 블록 */
+    .code-block {
+      position: relative;
+      background: var(--code-bg);
+      border-radius: 8px;
+      margin: 12px 0;
+      overflow: hidden;
+    }
+    .code-block pre {
+      padding: 16px 20px;
+      font-family: 'Consolas', 'D2Coding', monospace;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      color: var(--code-text);
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #313244;
+      color: #cdd6f4;
+      border: none;
+      border-radius: 5px;
+      padding: 4px 10px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .copy-btn:hover { background: var(--accent); color: #fff; }
+    .copy-btn.copied { background: var(--success); color: #fff; }
+
+    /* 인라인 코드 */
+    code.inline {
+      background: #f1f5f9;
+      color: #0f172a;
+      font-family: 'Consolas', monospace;
+      font-size: 0.82em;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* 테이블 */
+    .tbl-wrap { overflow-x: auto; margin: 12px 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+    }
+    thead th {
+      background: #f1f5f9;
+      padding: 9px 14px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody td {
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: #f8fafc; }
+
+    /* 단계 태그 */
+    .step-tag {
+      display: inline-block;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-right: 6px;
+    }
+
+    /* 플로우 다이어그램 */
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin: 12px 0;
+      font-size: 0.8rem;
+    }
+    .flow-item {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .flow-arrow { color: #94a3b8; font-size: 1rem; }
+
+    /* 체크리스트 */
+    .checklist { list-style: none; padding: 0; margin: 10px 0; }
+    .checklist li {
+      padding: 5px 0 5px 24px;
+      position: relative;
+      font-size: 0.855rem;
+      line-height: 1.6;
+    }
+    .checklist li::before {
+      content: '□';
+      position: absolute;
+      left: 0;
+      color: #94a3b8;
+    }
+
+    /* 구분선 */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      #sidebar { display: none; }
+      #main { padding: 24px 20px; }
+    }
+
+    /* 스크롤바 */
+    #sidebar::-webkit-scrollbar { width: 4px; }
+    #sidebar::-webkit-scrollbar-track { background: transparent; }
+    #sidebar::-webkit-scrollbar-thumb { background: #45475a; border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<aside id="sidebar">
+  <div class="logo">
+    <h1>AI Agent 02</h1>
+    <p>문서 자동화 Skill 실습</p>
+  </div>
+  <nav>
+    <div class="section-label">기초 (BASIC)</div>
+    <a href="#basic08">BASIC 08 — CLI · GitHub · Antigravity</a>
+
+    <div class="section-label">심화 (ADV)</div>
+    <a href="#adv01">ADV 01 — 4종 문서 자동 작성</a>
+    <a href="#adv02">ADV 02 — Playwright 웹 자동화</a>
+    <a href="#adv03">ADV 03 — GWS CLI Google Workspace</a>
+    <a href="#adv04">ADV 04 — 외부 API 확장</a>
+    <a href="#adv05">ADV 05 — Notion DB + 에이전트</a>
+    <a href="#adv06">ADV 06 — 세컨드 브레인 자동 분류</a>
+    <a href="#adv07">ADV 07 — PM 에이전트</a>
+    <a href="#adv08">ADV 08 — 멀티 에이전트 오케스트레이션</a>
+  </nav>
+</aside>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<main id="main">
+
+  <!-- 헤더 -->
+  <div class="page-header">
+    <h1>AI 에이전트 2 — 문서 자동화 Skill 실습</h1>
+    <p>CLI 도구부터 멀티 에이전트 오케스트레이션까지 · BASIC 08 + ADV 01~08</p>
+  </div>
+
+  <!-- 빠른 실행 -->
+  <div class="quick-cmd">
+    <span>⚡ 빠른 실행</span>
+    <code>claude --dangerously-skip-permissions</code>
+    <button class="copy-btn" onclick="copyCode(this, 'claude --dangerously-skip-permissions')">복사</button>
+  </div>
+
+
+  <!-- ══ BASIC 08 ══ -->
+  <section class="week-section" id="basic08">
+    <div class="week-title">
+      <span class="badge badge-basic">BASIC</span>
+      <h2>08 — CLI · GitHub · Antigravity 준비</h2>
+    </div>
+
+    <div class="card">
+      <h3>CLI 개요</h3>
+      <p><strong>Command Line Interface</strong>는 텍스트 명령으로 프로그램을 직접 제어하는 방식입니다.</p>
+      <h4>기본 구조</h4>
+      <div class="code-block">
+        <pre>[도구] [명령] [--옵션] [인수]</pre>
+        <button class="copy-btn" onclick="copyCode(this, '[도구] [명령] [--옵션] [인수]')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>세 가지 핵심 도구</h3>
+      <h4>1. Claude Code</h4>
+      <p>파일 편집, 코드 실행, MCP, Skill 실행 담당. 자동화와 스크립팅에 적합. Hooks, Skills, MCP 고급 기능 지원.</p>
+
+      <h4>2. GitHub CLI</h4>
+      <p>저장소, PR, 이슈를 터미널에서 관리.</p>
+
+      <h4>3. Antigravity CLI</h4>
+      <p>터미널에서 Google Antigravity에 직접 질문.</p>
+
+      <p style="margin-top:14px; padding: 12px 16px; background:#eff6ff; border-radius:8px; font-size:0.85rem; color:#1e40af;">
+        💡 세 도구를 조합하면 "저장소 상태를 확인하고, 외부 AI에게 의견을 묻고, 그 결과를 Skill 자동화로 이어가는 파이프라인"을 만들 수 있습니다.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>GitHub 설정</h3>
+      <ul>
+        <li>가입: <code class="inline">github.com/signup</code></li>
+        <li>설치 (Windows): <code class="inline">winget install GitHub.cli</code></li>
+        <li>설치 (macOS): <code class="inline">brew install gh</code></li>
+        <li>인증 확인: <code class="inline">gh auth status</code></li>
+      </ul>
+      <h4>스코프 지정 인증</h4>
+      <div class="code-block">
+        <pre>gh auth login --scopes repo,delete_repo,workflow,gist,read:org,admin:public_key,write:packages</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'gh auth login --scopes repo,delete_repo,workflow,gist,read:org,admin:public_key,write:packages')">복사</button>
+      </div>
+
+      <h4>GitHub CLI 기본 명령어</h4>
+      <div class="code-block">
+        <pre>gh repo list      # 저장소 목록
+gh pr list        # PR 목록
+gh issue list     # 이슈 목록</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'gh repo list\ngh pr list\ngh issue list')">복사</button>
+      </div>
+      <h4>Claude 요청 예시</h4>
+      <div class="code-block">
+        <pre>gh cli로 내 저장소 목록과 최근 PR 상태를 정리해주는 스킬을 만들어줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'gh cli로 내 저장소 목록과 최근 PR 상태를 정리해주는 스킬을 만들어줘')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Antigravity CLI 설정</h3>
+      <h4>설치</h4>
+      <div class="code-block">
+        <pre>curl -fsSL https://antigravity.google/cli/install.sh | bash</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'curl -fsSL https://antigravity.google/cli/install.sh | bash')">복사</button>
+      </div>
+      <h4>기본 사용법</h4>
+      <div class="code-block">
+        <pre>agy -p "질문이나 지시사항"</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'agy -p "질문이나 지시사항"')">복사</button>
+      </div>
+      <h4>직접 질문 예시</h4>
+      <div class="code-block">
+        <pre>agy -p "Claude Code와 Antigravity CLI의 차이점을 간단히 설명해줘"</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'agy -p \"Claude Code와 Antigravity CLI의 차이점을 간단히 설명해줘\"')">복사</button>
+      </div>
+      <h4>Claude 요청 예시</h4>
+      <div class="code-block">
+        <pre>bash로 agy -p 를 호출해서 내 질문에 Antigravity가 답하는 스킬을 만들어줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'bash로 agy -p 를 호출해서 내 질문에 Antigravity가 답하는 스킬을 만들어줘')">복사</button>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══ ADV 01 ══ -->
+  <section class="week-section" id="adv01">
+    <div class="week-title">
+      <span class="badge badge-adv">ADV</span>
+      <h2>01 — 엑셀 · 워드 · PPT · 한글 문서 자동 작성</h2>
+    </div>
+
+    <div class="card">
+      <h3>개요</h3>
+      <p>Python 기반 Skill을 통해 엑셀, 워드, PPT, 한글 문서를 자동 생성하고 하나의 에이전트 명령으로 통합 파이프라인을 구성합니다.</p>
+      <h4>핵심 라이브러리</h4>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>라이브러리</th><th>포맷</th><th>용도</th></tr></thead>
+          <tbody>
+            <tr><td><code class="inline">openpyxl</code></td><td>.xlsx</td><td>엑셀 데이터 분석</td></tr>
+            <tr><td><code class="inline">python-docx</code></td><td>.docx</td><td>워드 보고서 생성</td></tr>
+            <tr><td><code class="inline">python-pptx</code></td><td>.pptx</td><td>PPT 발표자료 생성</td></tr>
+            <tr><td><code class="inline">python-hwpx</code></td><td>.hwpx</td><td>한글 문서 생성</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="code-block">
+        <pre>pip install openpyxl python-docx python-pptx python-hwpx</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'pip install openpyxl python-docx python-pptx python-hwpx')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>BASIC 01 — 엑셀 분석 Skill</h3>
+      <p>목표: <code class="inline">openpyxl</code>로 매출 템플릿을 읽고 월별 통계 계산</p>
+      <h4>핵심 코드</h4>
+      <div class="code-block">
+        <pre>wb = load_workbook('매출데이터_템플릿.xlsx')
+ws = wb['매출 데이터']
+for row in ws.iter_rows(min_row=5, values_only=True):
+    print(row)</pre>
+        <button class="copy-btn" onclick="copyCode(this, `wb = load_workbook('매출데이터_템플릿.xlsx')\nws = wb['매출 데이터']\nfor row in ws.iter_rows(min_row=5, values_only=True):\n    print(row)`)">복사</button>
+      </div>
+      <h4>실습 단계</h4>
+      <ol class="card" style="border:none;padding:0;margin:0;background:transparent;">
+        <li>템플릿 다운로드 후 데이터 5건 이상 입력</li>
+        <li>"월별 합계와 평균 분석" 요청</li>
+        <li>최대 거래처와 평균 매출액 확인</li>
+      </ol>
+      <h4>Claude 요청 예시</h4>
+      <div class="code-block">
+        <pre>openpyxl 설치하고 엑셀 파일 읽는 Skill 만들어줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'openpyxl 설치하고 엑셀 파일 읽는 Skill 만들어줘')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>BASIC 02 — 워드 보고서 Skill</h3>
+      <p>목표: <code class="inline">python-docx</code>로 템플릿의 플레이스홀더를 분석 결과로 자동 치환</p>
+      <h4>핵심 코드</h4>
+      <div class="code-block">
+        <pre>doc = Document('보고서_템플릿.docx')
+for p in doc.paragraphs:
+    if '[보고서 제목]' in p.text:
+        p.runs[0].text = '실제 보고서 제목'
+doc.save('out.docx')</pre>
+        <button class="copy-btn" onclick="copyCode(this, `doc = Document('보고서_템플릿.docx')\nfor p in doc.paragraphs:\n    if '[보고서 제목]' in p.text:\n        p.runs[0].text = '실제 보고서 제목'\ndoc.save('out.docx')`)">복사</button>
+      </div>
+      <p>처리 영역: 제목, 개요, 표, 결론</p>
+      <h4>Claude 요청 예시</h4>
+      <div class="code-block">
+        <pre>엑셀 분석 결과를 바탕으로 보고서_템플릿.docx 양식에 맞게 보고서 만들어줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, '엑셀 분석 결과를 바탕으로 보고서_템플릿.docx 양식에 맞게 보고서 만들어줘')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>BASIC 03 — PPT Skill</h3>
+      <p>목표: <code class="inline">python-pptx</code>로 9장 구조 템플릿에 맞춰 발표자료 자동 구성</p>
+      <h4>핵심 코드</h4>
+      <div class="code-block">
+        <pre>prs = Presentation('회사_범용_템플릿.pptx')
+slide = prs.slides[3]
+for shape in slide.shapes:
+    if shape.has_text_frame:
+        shape.text_frame.text = '새 내용'</pre>
+        <button class="copy-btn" onclick="copyCode(this, `prs = Presentation('회사_범용_템플릿.pptx')\nslide = prs.slides[3]\nfor shape in slide.shapes:\n    if shape.has_text_frame:\n        shape.text_frame.text = '새 내용'`)">복사</button>
+      </div>
+      <h4>4단계 구성</h4>
+      <div class="flow">
+        <span class="flow-item">조사 (주제 웹조사 및 근거 수집)</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">구성 (9장 템플릿 구조 적용)</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">검토 (슬라이드 제목·본문 길이 확인)</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">생성 (pptx 파일 저장)</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>BASIC 04 — 한글 Skill</h3>
+      <p>목표: <code class="inline">python-hwpx</code>와 gonggong 템플릿으로 .hwpx 보고서 생성</p>
+      <h4>4단계 워크플로우</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li>report-template.hwpx 복사</li>
+        <li>ObjectFinder로 플레이스홀더 확인</li>
+        <li>zip_replace()로 내용 변경</li>
+        <li>fix_namespaces.py 실행</li>
+      </ol>
+      <h4>Claude 요청 예시</h4>
+      <div class="code-block">
+        <pre>gonggong report-template.hwpx로 [주제] 보고서 만들어줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'gonggong report-template.hwpx로 [주제] 보고서 만들어줘')">복사</button>
+      </div>
+      <p style="margin-top:10px;font-size:0.82rem;color:var(--text-muted);">검토: <code class="inline">hwp.polarisoffice.com</code>에서 설치 없이 열어 확인</p>
+    </div>
+
+    <div class="card">
+      <h3>PIPELINE — 4종 문서 동시 생성</h3>
+      <div class="flow">
+        <span class="flow-item">엑셀 (데이터 읽기)</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">워드 (보고서 채우기)</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">PPT (발표자료 생성)</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">한글 (.hwpx 보고서 생성)</span>
+      </div>
+      <h4>최종 에이전트 명령</h4>
+      <div class="code-block">
+        <pre>매출데이터_템플릿.xlsx 읽어서 워드, PPT, 한글 보고서를 모두 동시에 만들어줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, '매출데이터_템플릿.xlsx 읽어서 워드, PPT, 한글 보고서를 모두 동시에 만들어줘')">복사</button>
+      </div>
+      <h4>심화</h4>
+      <div class="code-block">
+        <pre>gh repo → 분석 → Skill 파일 생성</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'gh repo → 분석 → Skill 파일 생성')">복사</button>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══ ADV 02 ══ -->
+  <section class="week-section" id="adv02">
+    <div class="week-title">
+      <span class="badge badge-adv">ADV</span>
+      <h2>02 — 웹 브라우저 자동화와 Playwright MCP</h2>
+    </div>
+
+    <div class="card">
+      <h3>Playwright 소개</h3>
+      <p>Microsoft에서 만든 브라우저 자동화 라이브러리. Python과 JavaScript 지원, 자동 대기 기능, MCP 연동에 적합.</p>
+      <h4>MCP 방식 흐름</h4>
+      <div class="flow">
+        <span class="flow-item">Claude (MCP Tool 호출)</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">Playwright 서버 (브라우저와 통신)</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">AI (DOM 스냅샷을 텍스트로 판단)</span>
+      </div>
+      <p style="margin-top:10px;font-size:0.85rem;">확장 범위: 레코딩한 조작을 Python 스크립트로 변환하여 headless 백그라운드 실행</p>
+    </div>
+
+    <div class="card">
+      <h3>SETUP — Playwright MCP 설치</h3>
+      <div class="code-block">
+        <pre>claude mcp add playwright npx @playwright/mcp@latest</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'claude mcp add playwright npx @playwright/mcp@latest')">복사</button>
+      </div>
+      <h4>확인 단계</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li>Claude Code 재시작 또는 <code class="inline">/mcp</code> 명령으로 상태 확인</li>
+        <li>"playwright MCP 설치됐어?" 질문으로 연결 상태 검증</li>
+        <li><code class="inline">browser_navigate</code>, <code class="inline">browser_snapshot</code> 등 브라우저 툴 목록 확인</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h3>PRACTICE 01 — 스크래핑 연습 사이트 탐색</h3>
+      <p>대상 사이트: <code class="inline">books.toscrape.com</code> (법적 제한 없는 학습용 사이트)</p>
+      <h4>단계별 프롬프트</h4>
+      <div class="code-block">
+        <pre># 1단계
+books.toscrape.com 접속해서 첫 페이지 스크린샷 찍어줘
+
+# 2단계
+책 목록에서 제목과 가격 5개 수집해줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'books.toscrape.com 접속해서 첫 페이지 스크린샷 찍어줘')">복사</button>
+      </div>
+      <h4>최종 프롬프트</h4>
+      <div class="code-block">
+        <pre>books.toscrape.com 접속해서 책 5권 제목과 가격 수집해줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'books.toscrape.com 접속해서 책 5권 제목과 가격 수집해줘')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>PRACTICE 02 — Wikipedia 검색 자동화</h3>
+      <h4>2-1단계 (요소 분석)</h4>
+      <div class="code-block">
+        <pre>ko.wikipedia.org 접속해서 스냅샷 찍어줘
+검색창(input) 요소를 찾아서 셀렉터 알려줘
+# 예상 결과: #searchInput</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'ko.wikipedia.org 접속해서 스냅샷 찍어줘')">복사</button>
+      </div>
+      <h4>2-2단계 (검색 입력)</h4>
+      <div class="code-block">
+        <pre>검색창에 '인공지능' 입력하고 검색해줘
+결과 페이지 제목과 첫 문단 읽어줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, "검색창에 '인공지능' 입력하고 검색해줘\n결과 페이지 제목과 첫 문단 읽어줘")">복사</button>
+      </div>
+      <h4>2-3단계 (스크립트화)</h4>
+      <div class="code-block">
+        <pre>방금 한 Wikipedia 검색 과정을 Python 스크립트로 만들어줘
+# → headless=True 모드로 터미널에 결과 출력</pre>
+        <button class="copy-btn" onclick="copyCode(this, '방금 한 Wikipedia 검색 과정을 Python 스크립트로 만들어줘')">복사</button>
+      </div>
+      <h4>최종 프롬프트</h4>
+      <div class="code-block">
+        <pre>Wikipedia 키워드 검색 → 첫 문단 출력하는 headless Python 스크립트 만들어줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'Wikipedia 키워드 검색 → 첫 문단 출력하는 headless Python 스크립트 만들어줘')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>PRACTICE 03 — 가상 커뮤니티 사이트 전체 탐색</h3>
+      <h4>사이트 기능</h4>
+      <ul>
+        <li>회원가입 / 로그인 / 로그아웃</li>
+        <li>게시판 목록 / 게시물 상세 / 글쓰기</li>
+        <li>댓글 입력 / 스크롤 / 마이페이지</li>
+      </ul>
+      <h4>AI 탐색 시나리오</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li>HTML 파일을 브라우저로 열고 로컬 경로 확인</li>
+        <li>회원가입 (<code class="inline">testuser / 1234</code>)</li>
+        <li>로그인 후 게시판 이동 및 최신 글 파악</li>
+        <li>글쓰기, 댓글 작성, 댓글 영역 스크롤</li>
+      </ol>
+      <h4>자동 산출물 생성</h4>
+      <div class="flow">
+        <span class="flow-item">전 페이지 화면 캡처</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">python-pptx로 유저 플로우 PPT 생성</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">페이지별 슬라이드와 설명 자동 구성</span>
+      </div>
+      <h4>실습 프롬프트</h4>
+      <div class="code-block">
+        <pre>모든 페이지 스크린샷 찍고 유저 플로우 PPT 만들어줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, '모든 페이지 스크린샷 찍고 유저 플로우 PPT 만들어줘')">복사</button>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══ ADV 03 ══ -->
+  <section class="week-section" id="adv03">
+    <div class="week-title">
+      <span class="badge badge-adv">ADV</span>
+      <h2>03 — GWS CLI로 Google Workspace 자동화</h2>
+    </div>
+
+    <div class="card">
+      <h3>개요</h3>
+      <p>Claude가 <code class="inline">gws</code> 명령어를 직접 실행하여 Drive, Gmail, Calendar, Sheets, Docs, Forms를 제어합니다.</p>
+    </div>
+
+    <div class="card">
+      <h3>설치 및 인증 단계</h3>
+      <h4><span class="step-tag">Step 1</span> gws 설치</h4>
+      <div class="code-block">
+        <pre>npm install -g @googleworkspace/cli</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'npm install -g @googleworkspace/cli')">복사</button>
+      </div>
+
+      <h4><span class="step-tag">Step 2</span> gcloud 인증</h4>
+      <div class="code-block">
+        <pre>gcloud auth login --launch-browser</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'gcloud auth login --launch-browser')">복사</button>
+      </div>
+
+      <h4><span class="step-tag">Step 3</span> GCP 프로젝트 설정</h4>
+      <p style="font-size:0.85rem;">프로젝트 생성 후 <code class="inline">gws auth setup</code> 실행 (Forms API까지 활성화)</p>
+
+      <h4><span class="step-tag">Step 4</span> OAuth 클라이언트 생성</h4>
+      <p style="font-size:0.85rem;">동의 화면, 테스트 사용자, 클라이언트 ID 생성</p>
+
+      <h4><span class="step-tag">Step 5</span> 환경 파일 저장</h4>
+      <div class="code-block">
+        <pre>~/.config/gws/.env</pre>
+        <button class="copy-btn" onclick="copyCode(this, '~/.config/gws/.env')">복사</button>
+      </div>
+
+      <h4><span class="step-tag">Step 6</span> 최종 스코프 인증</h4>
+      <div class="code-block">
+        <pre>gws auth login -s drive,gmail,calendar,sheets,docs,forms</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'gws auth login -s drive,gmail,calendar,sheets,docs,forms')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>인증 확인 및 핵심 명령 패턴</h3>
+      <div class="code-block">
+        <pre># 상태 확인
+gws auth status
+
+# Drive 테스트
+gws drive files list --params '{"pageSize":5}'
+
+# Gmail 읽기
+gws gmail messages list --params '{"q":"is:unread"}'
+
+# Calendar 조회
+gws calendar events list --calendarId primary</pre>
+        <button class="copy-btn" onclick="copyCode(this, `gws auth status\ngws drive files list --params '{\"pageSize\":5}'\ngws gmail messages list --params '{\"q\":\"is:unread\"}'\ngws calendar events list --calendarId primary`)">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Skill 문서화</h3>
+      <div class="code-block">
+        <pre>gws CLI 사용법 정리해서 gws_skill.md Skill 문서로 만들어줘.
+인증 정보(CLIENT_ID 등)는 .env 파일 연결로, Skill만으로 바로 쓸 수 있게 구성해줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'gws CLI 사용법 정리해서 gws_skill.md Skill 문서로 만들어줘.\n인증 정보(CLIENT_ID 등)는 .env 파일 연결로, Skill만으로 바로 쓸 수 있게 구성해줘')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>실습 4종</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>서비스</th><th>자연어 명령</th></tr></thead>
+          <tbody>
+            <tr><td>Drive</td><td>"내 드라이브 최근 파일 5개 목록 보여주고, 텍스트 파일 하나 만들어서 업로드해줘"</td></tr>
+            <tr><td>Gmail</td><td>"안 읽은 메일 3개 요약해주고, 나한테 실습 완료 메일 보내줘"</td></tr>
+            <tr><td>Calendar</td><td>"이번 주 일정 보여주고, 내일 오후 3시에 테스트 일정 하나 추가해줘"</td></tr>
+            <tr><td>Sheets·Docs·Forms</td><td>"구글 시트·닥스·폼 각 하나씩 만들어줘 (매출표 / 회의록 / 만족도 설문)"</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══ ADV 04 ══ -->
+  <section class="week-section" id="adv04">
+    <div class="week-title">
+      <span class="badge badge-adv">ADV</span>
+      <h2>04 — 외부 API로 AI 기능 확장</h2>
+    </div>
+
+    <div class="card">
+      <h3>API 키 발급 기본 흐름</h3>
+      <div class="flow">
+        <span class="flow-item">회원가입</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">개발자 콘솔 접속</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">키 생성</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">복사</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>네이버 오픈 API와 데이터랩 Skill</h3>
+      <h4>사용 API</h4>
+      <ul>
+        <li><strong>검색어 트렌드 API:</strong> 최대 5개 키워드 비교 (시장 조사, 마케팅 분석)</li>
+        <li><strong>쇼핑인사이트 API:</strong> 카테고리별 클릭 트렌드 (제품 수요 분석)</li>
+      </ul>
+      <h4>앱 등록 단계</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li><code class="inline">developers.naver.com/apps/#/list</code> 접속</li>
+        <li>애플리케이션 등록 클릭</li>
+        <li>이름 입력 (예: <code class="inline">naver-datalab-skill</code>)</li>
+        <li>데이터랩(검색어트렌드)과 데이터랩(쇼핑인사이트) 체크</li>
+        <li>환경: Web, URL: <code class="inline">http://localhost:3000</code></li>
+        <li>Client ID와 Client Secret 복사</li>
+      </ol>
+      <h4>환경변수 보관</h4>
+      <div class="code-block">
+        <pre>NAVER_CLIENT_ID=발급받은_클라이언트_ID
+NAVER_CLIENT_SECRET=발급받은_시크릿</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'NAVER_CLIENT_ID=발급받은_클라이언트_ID\nNAVER_CLIENT_SECRET=발급받은_시크릿')">복사</button>
+      </div>
+      <h4>Claude 요청 예시</h4>
+      <div class="code-block">
+        <pre>아래 네이버 데이터랩 API 문서를 curl로 읽고, ID/Secret으로 CLI Skill 만들어줘
+문서: developers.naver.com/docs/serviceapi/datalab/search/search.md</pre>
+        <button class="copy-btn" onclick="copyCode(this, '아래 네이버 데이터랩 API 문서를 curl로 읽고, ID/Secret으로 CLI Skill 만들어줘\n문서: developers.naver.com/docs/serviceapi/datalab/search/search.md')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>타입캐스트 AI 음성 합성 API</h3>
+      <h4>활용 시나리오</h4>
+      <ul>
+        <li>뉴스 요약 텍스트 → MP3 음성 자동 생성</li>
+        <li>블로그 글 → MP3 오디오 변환</li>
+        <li>카드뉴스 내레이션 자동 제작</li>
+      </ul>
+      <h4>API 키 발급 단계</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li><code class="inline">typecast.ai/developers/api</code> 접속</li>
+        <li>구글 계정으로 로그인</li>
+        <li>API 키 탭 → 키 생성 버튼</li>
+        <li>API 키 복사</li>
+      </ol>
+      <h4>voice_id 확인 방법</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li>타입캐스트 캐릭터 목록 페이지 접속</li>
+        <li>원하는 캐릭터 클릭 → 미리 듣기로 음성 확인</li>
+        <li>URL 또는 개발자 도구에서 voice_id 복사</li>
+        <li>URL 형식: <code class="inline">typecast.ai/voices/[voice_id]</code></li>
+        <li>예시: <code class="inline">5f3b2e1d0a7c4f8b9e2d1a3c</code></li>
+      </ol>
+      <h4>Claude 요청 예시</h4>
+      <div class="code-block">
+        <pre>typecast.ai/docs/overview 읽고, API키와 voice_id로 TTS CLI Skill 만들어줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'typecast.ai/docs/overview 읽고, API키와 voice_id로 TTS CLI Skill 만들어줘')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>공개 API 직접 연결 실습</h3>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li><strong>API 선택:</strong> <code class="inline">github.com/yybmion/public-apis-4Kr</code>에서 선택</li>
+        <li><strong>키 발급:</strong> "[선택한 API] 키 발급 방법 알려줘"</li>
+        <li><strong>Skill 제작:</strong> "[API URL] 읽고 CLI Skill 만들어줘"</li>
+      </ol>
+      <h4>완성 확인 체크리스트</h4>
+      <ul class="checklist">
+        <li>API 문서 URL과 인증 방식이 Skill 문서에 정리됨</li>
+        <li>키는 <code class="inline">.env</code> 또는 실행 시 입력 방식으로 분리</li>
+        <li>샘플 요청 실행으로 정상 응답 확인</li>
+      </ul>
+      <h4>최종 프롬프트</h4>
+      <div class="code-block">
+        <pre>이 API 문서를 읽고, 내 API 키를 환경변수로 받아서 실행하는 CLI Skill을 만들어줘.
+사용 예시와 테스트 명령어까지 포함해줘.</pre>
+        <button class="copy-btn" onclick="copyCode(this, '이 API 문서를 읽고, 내 API 키를 환경변수로 받아서 실행하는 CLI Skill을 만들어줘.\n사용 예시와 테스트 명령어까지 포함해줘.')">복사</button>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══ ADV 05 ══ -->
+  <section class="week-section" id="adv05">
+    <div class="week-title">
+      <span class="badge badge-adv">ADV</span>
+      <h2>05 — Notion DB + 에이전트 연결</h2>
+    </div>
+
+    <div class="card">
+      <h3>핵심 목표</h3>
+      <p>Notion DB + API 연결을 완성해 Claude가 DB 구조를 파악하고, Status가 '할일'인 항목을 조회하며, 샘플 데이터까지 채우는 자동화 흐름을 만듭니다.</p>
+      <h4>Notion의 역할: 외부 기억 장치</h4>
+      <ul>
+        <li>API 공개로 AI가 직접 읽고 쓸 수 있음</li>
+        <li>문서 + 스프레드시트 + DB + 칸반 통합 관리</li>
+        <li>Status 필터로 AI가 자동 조회, 파이프라인 연결 가능</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Notion MCP vs Notion API</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>방식</th><th>특징</th><th>용도</th></tr></thead>
+          <tbody>
+            <tr><td>Notion MCP</td><td>대화 중 직접 연결, 별도 코드 불필요</td><td>빠른 테스트, 간단한 읽기/쓰기</td></tr>
+            <tr><td>Notion API</td><td>Python 코드로 직접 호출, DB 필터·정렬·페이지네이션 자유로움</td><td>자동화 스크립트, 반복 호출, 일괄 수정</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:10px;font-size:0.82rem;color:var(--text-muted);">이번 수업 방식: API 토큰 발급 → <code class="inline">notion-query</code> 스킬 제작</p>
+    </div>
+
+    <div class="card">
+      <h3>API 토큰 발급 단계</h3>
+      <h4><span class="step-tag">Step 1</span> Integration 생성</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li><code class="inline">notion.so/my-integrations</code> 접속</li>
+        <li><code class="inline">+ New integration</code> 클릭</li>
+        <li>이름 입력 (예: <code class="inline">my-agent</code>)</li>
+        <li>Submit 후 <code class="inline">Internal Integration Token</code> 복사 (<code class="inline">secret_...</code> 형태)</li>
+      </ol>
+      <h4><span class="step-tag">Step 2</span> Integration 페이지 연결</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li>연결할 Notion DB 페이지 열기</li>
+        <li>우상단 <code class="inline">...</code> 메뉴 → Connections에서 Integration 선택</li>
+        <li>Confirm으로 완료</li>
+      </ol>
+      <h4><span class="step-tag">Step 3</span> DB ID 확인</h4>
+      <p style="font-size:0.85rem;">URL: <code class="inline">notion.so/workspace/[DB_ID]?v=...</code> 형태에서 ID 복사</p>
+    </div>
+
+    <div class="card">
+      <h3>Notion DB 스키마 설계 (핵심 속성 4개)</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>속성</th><th>타입</th><th>설명</th></tr></thead>
+          <tbody>
+            <tr><td>Title</td><td>Text</td><td>각 행의 고유 식별자</td></tr>
+            <tr><td>Status</td><td>Select</td><td>할일 / 진행중 / 완료</td></tr>
+            <tr><td>Date</td><td>Date</td><td>생성·마감·업데이트 시각</td></tr>
+            <tr><td>Relation</td><td>Relation</td><td>Tasks와 Docs 연결</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Claude 단계별 지시사항</h3>
+      <h4><span class="step-tag">1단계</span> 구조 파악</h4>
+      <div class="code-block">
+        <pre>이 Notion DB의 구조를 분석해서 어떤 속성(컬럼)이 있는지 목록으로 알려줘.
+DB ID: [복사해둔 ID]</pre>
+        <button class="copy-btn" onclick="copyCode(this, '이 Notion DB의 구조를 분석해서 어떤 속성(컬럼)이 있는지 목록으로 알려줘.\nDB ID: [복사해둔 ID]')">복사</button>
+      </div>
+      <h4><span class="step-tag">2단계</span> 샘플 데이터 입력</h4>
+      <div class="code-block">
+        <pre>방금 파악한 구조에 맞춰 샘플 데이터 5개를 Notion DB에 직접 채워줘.</pre>
+        <button class="copy-btn" onclick="copyCode(this, '방금 파악한 구조에 맞춰 샘플 데이터 5개를 Notion DB에 직접 채워줘.')">복사</button>
+      </div>
+      <h4><span class="step-tag">3단계</span> 조회 스킬 자동 생성</h4>
+      <div class="code-block">
+        <pre>내 Notion API 토큰은 secret_xxx 입니다.
+Tasks DB ID는 abc123 입니다.
+이 DB에서 Status가 할일인 항목을 조회하는 Python 스킬을 만들어줘.</pre>
+        <button class="copy-btn" onclick="copyCode(this, '내 Notion API 토큰은 secret_xxx 입니다.\nTasks DB ID는 abc123 입니다.\n이 DB에서 Status가 할일인 항목을 조회하는 Python 스킬을 만들어줘.')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>완성된 자동화 흐름</h3>
+      <div class="flow" style="flex-direction:column; align-items:flex-start;">
+        <span class="flow-item">지시 등록 (Notion DB에 작업 입력)</span>
+        <span class="flow-arrow" style="padding-left:20px;">↓</span>
+        <span class="flow-item">Claude 감지 (DB를 읽어 할일 확인)</span>
+        <span class="flow-arrow" style="padding-left:20px;">↓</span>
+        <span class="flow-item">작업 실행 (자동으로 처리)</span>
+        <span class="flow-arrow" style="padding-left:20px;">↓</span>
+        <span class="flow-item">결과 저장 (Notion DB에 기록)</span>
+      </div>
+      <h4>완성 기준</h4>
+      <ul class="checklist">
+        <li>Notion DB에 토큰·ID 연결 완료</li>
+        <li>Claude가 구조 파악</li>
+        <li>샘플 데이터 자동 입력</li>
+        <li>Status 필터 조회 스킬 작동</li>
+      </ul>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══ ADV 06 ══ -->
+  <section class="week-section" id="adv06">
+    <div class="week-title">
+      <span class="badge badge-adv">ADV</span>
+      <h2>06 — 세컨드 브레인 자동 분류 저장</h2>
+    </div>
+
+    <div class="card">
+      <h3>개요</h3>
+      <p>터미널 입력을 Claude가 분석해 Notion DB 4종에 자동으로 저장하는 시스템. 트리거 키워드로 분류 위치 결정.</p>
+    </div>
+
+    <div class="card">
+      <h3>4가지 메모 유형과 트리거</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>트리거</th><th>저장 위치</th><th>예시</th></tr></thead>
+          <tbody>
+            <tr><td><code class="inline">개인:</code></td><td>Personal Tasks DB</td><td>주말에 운동화 사기</td></tr>
+            <tr><td><code class="inline">업무:</code> / <code class="inline">학교:</code></td><td>Work Tasks DB</td><td>내일까지 기획서 제출</td></tr>
+            <tr><td><code class="inline">메모:</code></td><td>Notes DB</td><td>다음 강의 아이디어</td></tr>
+            <tr><td><code class="inline">배움:</code></td><td>Docs DB</td><td>Notion API 필터가 자유롭다</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>DB 스키마 구조</h3>
+      <ul>
+        <li><strong>Personal Tasks:</strong> Title, Status, Due Date, Priority</li>
+        <li><strong>Work Tasks:</strong> Title, Status, Due Date, Tag</li>
+        <li><strong>Notes:</strong> Title, Content, Date, Priority</li>
+        <li><strong>Docs:</strong> Title, Content, Date, Topic</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>파일 구조</h3>
+      <div class="code-block">
+        <pre>skills/
+  notion-personal.md      # 개인 할일 저장
+  notion-work.md          # 업무/학교 할일 저장
+  notion-notes.md         # 메모 저장
+  notion-docs.md          # 배움 저장
+CLAUDE.md                 # 분류 규칙 지시문</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'skills/\n  notion-personal.md\n  notion-work.md\n  notion-notes.md\n  notion-docs.md\nCLAUDE.md')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>CLAUDE.md 분류 규칙</h3>
+      <div class="code-block">
+        <pre>## 메모 분류 규칙
+
+사용자가 메모 입력 시:
+- "개인:" 시작 → notion-personal 스킬 실행
+- "업무:" 또는 "학교:" 시작 → notion-work 스킬 실행
+- "메모:" 시작 → notion-notes 스킬 실행
+- "배움:" 시작 → notion-docs 스킬 실행
+
+저장 완료 후 "저장됨: [DB명]" 출력</pre>
+        <button class="copy-btn" onclick="copyCode(this, '## 메모 분류 규칙\n\n사용자가 메모 입력 시:\n- \"개인:\" 시작 → notion-personal 스킬 실행\n- \"업무:\" 또는 \"학교:\" 시작 → notion-work 스킬 실행\n- \"메모:\" 시작 → notion-notes 스킬 실행\n- \"배움:\" 시작 → notion-docs 스킬 실행\n\n저장 완료 후 \"저장됨: [DB명]\" 출력')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>중요도 자동 태깅</h3>
+      <ul>
+        <li><code class="inline">급해</code>, <code class="inline">오늘까지</code>, <code class="inline">긴급</code> 포함 → Priority: <strong>높음</strong></li>
+        <li><code class="inline">나중에</code>, <code class="inline">언젠가</code>, <code class="inline">여유있을때</code> 포함 → Priority: <strong>낮음</strong></li>
+        <li>기타 → Priority: <strong>보통</strong></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>실습 순서</h3>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li>Notion 저장 스킬 4개 제작 의뢰</li>
+        <li>CLAUDE.md에 트리거 키워드별 분류 규칙 작성</li>
+        <li>4가지 입력으로 저장 테스트: <code class="inline">개인:</code> / <code class="inline">업무:</code> / <code class="inline">메모:</code> / <code class="inline">배움:</code></li>
+      </ol>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══ ADV 07 ══ -->
+  <section class="week-section" id="adv07">
+    <div class="week-title">
+      <span class="badge badge-adv">ADV</span>
+      <h2>07 — Notion을 보고 일하는 PM 에이전트</h2>
+    </div>
+
+    <div class="card">
+      <h3>개요</h3>
+      <p>PM 에이전트가 Work DB의 오늘 할 일을 조회하고, task 유형에 맞는 스킬을 실행하며, Notion Status를 직접 업데이트하는 자동화 흐름.</p>
+      <h4>핵심 명령어 (사용자 입력 한 줄)</h4>
+      <div class="code-block">
+        <pre>Work에서 오늘 처리해야 하는 것들 찾아서 처리해줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'Work에서 오늘 처리해야 하는 것들 찾아서 처리해줘')">복사</button>
+      </div>
+      <p style="font-size:0.82rem;color:var(--text-muted);">→ 조회, 분류, 실행, 상태 업데이트, 완료 보고까지 트리거</p>
+    </div>
+
+    <div class="card">
+      <h3>필수 스킬 및 도구 (기존 스킬 재사용)</h3>
+      <ul>
+        <li><code class="inline">gws_skill.md</code> — Google Workspace: 캘린더, Gmail, Sheets</li>
+        <li><code class="inline">naver-datalab.md</code> — 리서치 조사</li>
+        <li><code class="inline">notion-work.md</code> — DB 조회/업데이트</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Task 유형별 행동 규칙</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>유형</th><th>예시</th><th>필요 행동</th><th>도구</th></tr></thead>
+          <tbody>
+            <tr><td>미팅</td><td>팀장님과 킥오프 미팅 일정 확인</td><td>캘린더 등록</td><td>GWS Calendar</td></tr>
+            <tr><td>리서치</td><td>경쟁사 AI 도구 도입 사례 조사</td><td>트렌드 조사 후 저장</td><td>Naver Datalab</td></tr>
+            <tr><td>문서</td><td>이번달 업무 성과 정리 시트 작성</td><td>구글 시트 생성</td><td>GWS Sheets</td></tr>
+            <tr><td>이메일</td><td>거래처에 진행 현황 발송</td><td>이메일 작성·발송</td><td>GWS Gmail</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>CLAUDE.md 처리 규칙</h3>
+      <div class="code-block">
+        <pre>명령 수신 시:
+(1) 오늘 마감일인 task 목록 조회
+(2) 순서대로 처리
+(3) 처리 시작 전 Status='진행중' 변경
+(4) 완료 후 Status='완료' 변경
+(5) 오류 시 메모에 기록
+
+유형별 스킬 매핑:
+- 미팅 → work-meeting 스킬: task명에서 일정 파악 후 캘린더 등록
+- 리서치 → work-research 스킬: 키워드 조사 후 메모 저장
+- 문서 → work-docs 스킬: 시트 생성 후 링크 저장
+- 이메일 → work-email 스킬: 메일 작성 후 발송</pre>
+        <button class="copy-btn" onclick="copyCode(this, '명령 수신 시:\n(1) 오늘 마감일인 task 목록 조회\n(2) 순서대로 처리\n(3) 처리 시작 전 Status=\'진행중\' 변경\n(4) 완료 후 Status=\'완료\' 변경\n(5) 오류 시 메모에 기록')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>유형별 스킬 제작 프롬프트</h3>
+      <h4>work-meeting.md</h4>
+      <div class="code-block">
+        <pre>미팅 task는 캘린더에 일정 등록. task명에서 날짜·시간 파악 후 GWS calendar로 등록하고 완료 처리</pre>
+        <button class="copy-btn" onclick="copyCode(this, '미팅 task는 캘린더에 일정 등록. task명에서 날짜·시간 파악 후 GWS calendar로 등록하고 완료 처리')">복사</button>
+      </div>
+      <h4>work-research.md</h4>
+      <div class="code-block">
+        <pre>리서치 task는 키워드 추출해 데이터랩 조사, 결과 요약을 Work DB 메모에 저장 후 완료 처리</pre>
+        <button class="copy-btn" onclick="copyCode(this, '리서치 task는 키워드 추출해 데이터랩 조사, 결과 요약을 Work DB 메모에 저장 후 완료 처리')">복사</button>
+      </div>
+      <h4>work-docs.md</h4>
+      <div class="code-block">
+        <pre>문서 task는 정리할 내용 파악 후 구글 시트 생성, 링크를 Work DB에 저장 후 완료 처리</pre>
+        <button class="copy-btn" onclick="copyCode(this, '문서 task는 정리할 내용 파악 후 구글 시트 생성, 링크를 Work DB에 저장 후 완료 처리')">복사</button>
+      </div>
+      <h4>work-email.md</h4>
+      <div class="code-block">
+        <pre>이메일 task는 수신자와 용건 파악해 제목·본문 작성, GWS Gmail로 발송 후 완료 처리</pre>
+        <button class="copy-btn" onclick="copyCode(this, '이메일 task는 수신자와 용건 파악해 제목·본문 작성, GWS Gmail로 발송 후 완료 처리')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>4가지 검증 케이스</h3>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li><strong>구글 캘린더 등록:</strong> 미팅 유형 → task명 분석 → 캘린더 등록 → Status 완료</li>
+        <li><strong>데이터랩 조사:</strong> 리서치 유형 → 키워드 추출 → 검색량 확인 → 메모 저장</li>
+        <li><strong>구글 시트 생성:</strong> 문서 유형 → 컬럼 구조 구성 → Sheets 생성 → 링크 기록</li>
+        <li><strong>지메일 발송:</strong> 이메일 유형 → 제목·본문 작성 → Gmail 발송 → 상태 업데이트</li>
+      </ol>
+      <h4>완성 기준</h4>
+      <p style="font-size:0.85rem; padding:12px 16px; background:#f0fdf4; border-radius:8px; color:#166534; margin-top:12px;">
+        Notion에서 Status가 "시작 전 → 진행중 → 완료"로 변경되고, 실제 캘린더·메모·시트·이메일 결과물 생성 확인
+      </p>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══ ADV 08 ══ -->
+  <section class="week-section" id="adv08">
+    <div class="week-title">
+      <span class="badge badge-adv">ADV</span>
+      <h2>08 — 멀티 에이전트 오케스트레이션</h2>
+    </div>
+
+    <div class="card">
+      <h3>개요</h3>
+      <p>"PM이 지휘하고 담당자들이 각자 실행하는" 구조의 캡스톤 프로젝트. Notion DB를 통해 task가 분배되고 폴링 방식으로 감지됩니다.</p>
+    </div>
+
+    <div class="card">
+      <h3>핵심 아키텍처 (실행 폴더 구조)</h3>
+      <div class="code-block">
+        <pre>리허설_공유용/
+├── PM/.claude/                 # CLAUDE.md + skills
+├── 박부장/.claude/skills/       # naver-search-trend, gmail
+├── 이과장/.claude/skills/       # gmail, sheets
+├── 정대리/.claude/skills/       # sheets, gmail
+├── 최주임/.claude/skills/       # stability-image-gen, drive
+├── 김대표/.claude/skills/       # slides
+└── _공용/notion_poller.py       # 10초 폴링</pre>
+        <button class="copy-btn" onclick="copyCode(this, '리허설_공유용/\n├── PM/.claude/\n├── 박부장/.claude/skills/\n├── 이과장/.claude/skills/\n├── 정대리/.claude/skills/\n├── 최주임/.claude/skills/\n├── 김대표/.claude/skills/\n└── _공용/notion_poller.py')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>주요 역할 분담</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>담당자</th><th>업무</th><th>산출물</th></tr></thead>
+          <tbody>
+            <tr><td>박부장</td><td>시장조사·경쟁사분석</td><td>Google Sheets</td></tr>
+            <tr><td>이과장</td><td>인플루언서·예산안</td><td>Sheets/Gmail</td></tr>
+            <tr><td>정대리</td><td>개발일정·외주이메일</td><td>Sheets/Gmail</td></tr>
+            <tr><td>최주임</td><td>AI 이미지시안</td><td>PNG 파일</td></tr>
+            <tr><td>김대표</td><td>이사회보고서</td><td>Slides</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>폴링(Polling) 메커니즘</h3>
+      <div class="code-block">
+        <pre>1. notion_poller.py 실행 → 10초 대기
+2. Notion DB에서 "내 이름 + 시작 전" task 조회
+3. 새 task 발견 시 Status를 "진행 중"으로 변경
+4. 스킬 호출 → 산출물 생성 → Status "완료"로 변경
+5. 다시 대기 상태로 돌아가 반복</pre>
+        <button class="copy-btn" onclick="copyCode(this, '1. notion_poller.py 실행 → 10초 대기\n2. Notion DB에서 \"내 이름 + 시작 전\" task 조회\n3. 새 task 발견 시 Status를 \"진행 중\"으로 변경\n4. 스킬 호출 → 산출물 생성 → Status \"완료\"로 변경\n5. 다시 대기 상태로 돌아가 반복')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>AI 이미지 생성 스킬 추가</h3>
+      <h4>API 준비</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li><code class="inline">platform.stability.ai</code> 접속 후 회원가입</li>
+        <li>Dashboard → API Keys → Create Key</li>
+        <li><code class="inline">.env</code>에 <code class="inline">STABILITY_API_KEY=sk-xxx</code> 저장</li>
+      </ol>
+      <h4>Claude 요청 예시</h4>
+      <div class="code-block">
+        <pre>stability.ai API로 이미지 생성 스킬 만들어줘.
+모델: sd3.5-flash, 입력: 텍스트 설명(한영 자동번역), 출력: output/ PNG</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'stability.ai API로 이미지 생성 스킬 만들어줘.\n모델: sd3.5-flash, 입력: 텍스트 설명(한영 자동번역), 출력: output/ PNG')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>7단계 실습 로드맵</h3>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2.2;">
+        <li>Notion 템플릿 복제 → Integration 연결</li>
+        <li><code class="inline">.env</code> 설정 → <code class="inline">NOTION_TOKEN</code>, <code class="inline">REHEARSAL_DB_ID</code>, <code class="inline">STABILITY_API_KEY</code></li>
+        <li>터미널 6개 실행 → PM + 담당자 5명</li>
+        <li>폴링 시작 → 담당자 5명에서 폴링 활성화</li>
+        <li>회의록 투입 → PM 터미널에 Google Docs 링크 전달</li>
+        <li>자동 처리 관찰 → Status 변화 (시작 전 → 진행 중 → 완료)</li>
+        <li>결과 확인 → Notion 메모 링크 + outputs 산출물</li>
+      </ol>
+      <p style="font-size:0.85rem; padding:12px 16px; background:#fef9c3; border-radius:8px; color:#854d0e; margin-top:12px;">
+        ⏱ 완성 기준: 약 5분 안에 5개 산출물 생성, Notion 상태 모두 완료
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>세팅 체크리스트</h3>
+      <ul class="checklist">
+        <li>Notion DB 복제</li>
+        <li><code class="inline">.env</code> 3줄 입력 (NOTION_TOKEN, DB_ID, Stability API)</li>
+        <li>터미널 6개 준비</li>
+        <li>담당자 폴링 대기 상태 확인</li>
+      </ul>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- 전체 커리큘럼 요약 -->
+  <section class="week-section">
+    <div class="week-title">
+      <h2>전체 커리큘럼 흐름 요약</h2>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>회차</th><th>주제</th><th>핵심 도구</th></tr></thead>
+        <tbody>
+          <tr><td>BASIC 08</td><td>CLI · GitHub · Antigravity 준비</td><td>Claude Code, gh, agy</td></tr>
+          <tr><td>ADV 01</td><td>4종 오피스 문서 자동 작성</td><td>openpyxl, python-docx, python-pptx, python-hwpx</td></tr>
+          <tr><td>ADV 02</td><td>웹 브라우저 자동화</td><td>Playwright MCP</td></tr>
+          <tr><td>ADV 03</td><td>Google Workspace 자동화</td><td>GWS CLI</td></tr>
+          <tr><td>ADV 04</td><td>외부 API 연결</td><td>네이버 데이터랩, 타입캐스트 TTS, 공개 API</td></tr>
+          <tr><td>ADV 05</td><td>Notion DB + 에이전트 연결</td><td>Notion API</td></tr>
+          <tr><td>ADV 06</td><td>세컨드 브레인 자동 분류 저장</td><td>Notion DB 4종</td></tr>
+          <tr><td>ADV 07</td><td>PM 에이전트</td><td>Notion + GWS + Datalab</td></tr>
+          <tr><td>ADV 08</td><td>멀티 에이전트 오케스트레이션</td><td>Notion 폴링 + Stability AI</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // 코드 복사
+  function copyCode(btn, text) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '복사됨 ✓';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = '복사';
+        btn.classList.remove('copied');
+      }, 1800);
+    }).catch(() => {
+      // fallback
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      btn.textContent = '복사됨 ✓';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = '복사';
+        btn.classList.remove('copied');
+      }, 1800);
+    });
+  }
+
+  // 사이드바 활성화 (IntersectionObserver)
+  const sections = document.querySelectorAll('.week-section[id]');
+  const navLinks = document.querySelectorAll('#sidebar nav a');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(a => a.classList.remove('active'));
+        const active = document.querySelector(`#sidebar nav a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

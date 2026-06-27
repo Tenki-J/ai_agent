@@ -1,0 +1,225 @@
+================================================================
+  에이전트(AI Agent) 발전 방향 자료조사
+  조사 일자: 2026-06-27
+================================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. 개요 및 시장 규모
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2026년 기준 에이전틱 AI(Agentic AI) 시장 규모는 약 109억 달러($10.91B)로,
+2025년 대비 43% 성장한 수치다. Gartner는 에이전틱 AI를 2026년 최상위 기술 트렌드로
+선정했으며, Deloitte 연구에 따르면 GenAI를 활용하는 기업의 절반이 2027년까지
+자율 에이전트를 배포할 것으로 전망했다.
+
+- 기업의 52%가 이미 에이전트를 프로덕션 환경에 배포
+- 기업의 85%가 최소 하나의 워크플로우에 AI 에이전트를 통합
+- 2026년까지 기업 애플리케이션의 40%에 태스크 특화 AI 에이전트 포함 예상
+- 2025년 기준 79%의 기업이 에이전틱 AI를 일정 수준 도입했으며, 이 중 96%가
+  향후 사용 확대 계획
+
+[출처]
+- Greenice: AI agent development trends 2026 (542개 프로젝트 분석)
+  https://greenice.net/ai-agent-development-trends/
+- Acropolium: Agentic AI Trends 2026
+  https://acropolium.com/blog/agentic-ai-trends/
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. 챗봇에서 자율 운영 소프트웨어로의 진화
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+AI 에이전트는 단순 질의응답 수준을 벗어나 실제 비즈니스 환경에서 다단계
+워크플로우를 스스로 계획·실행하는 방향으로 진화하고 있다.
+
+[핵심 변화]
+- 프롬프트 중심 → 의도(Intent) 중심: 사용자가 목표를 설정하면 에이전트가
+  세부 작업을 자율 처리
+- 도구 통합: 외부 API, 데이터베이스, 파일 시스템, 브라우저 등 다양한 도구를
+  스스로 선택하고 호출
+- 다단계 추론: 단일 응답이 아닌 계획 수립 → 실행 → 결과 검증의 반복 루프
+- 최소 감독 운영: 대부분의 엔터프라이즈 배포에서는 여전히 human-in-the-loop
+  구조를 유지하면서 점진적으로 자율성을 확대
+
+[출처]
+- Symphony Solutions: AI Agents in 2026: The Future of Autonomous Software
+  https://symphony-solutions.com/insights/ai-agents-in-2026
+- Generative Inc.: Agentic AI in 2026 - How AI Went from Chatting to Doing
+  https://www.generative.inc/agentic-ai-in-2026-how-ai-went-from-chatting-to-doing
+- Medium / Arash Nicoomanesh: From Generative to Agentic AI: A Roadmap in 2026
+  https://medium.com/@anicomanesh/from-generative-to-agentic-ai-a-roadmap-in-2026-8e553b43aeda
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. 멀티 에이전트 오케스트레이션
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+단일 에이전트에서 특화된 복수 에이전트의 협업 구조로 발전하고 있다.
+각 에이전트는 특정 역할에 집중하며, 메시지 전달과 데이터 공유로 협력한다.
+
+[구조 특징]
+- 오케스트레이터 에이전트: 전체 워크플로우 조율
+- 서브 에이전트: 데이터 수집, 분석, 보고서 작성 등 세부 역할 분담
+- 병렬 처리: 독립적인 작업을 동시 실행하여 속도 향상
+- 크로스 도메인 협력: 서로 다른 기업·시스템의 에이전트 간 협업 가능
+
+[출처]
+- MachineLearningMastery: 7 Agentic AI Trends to Watch in 2026
+  https://machinelearningmastery.com/7-agentic-ai-trends-to-watch-in-2026/
+- Firecrawl: Top 13 Agentic AI Trends to Watch in 2026
+  https://www.firecrawl.dev/blog/agentic-ai-trends
+- Salesmate: AI agent trends for 2026: 7 shifts to watch
+  https://www.salesmate.io/blog/future-of-ai-agents/
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. 표준 프로토콜 — MCP와 A2A
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+에이전트 생태계 확산의 핵심은 표준화다. 2026년 현재 두 가지 주요 프로토콜이
+기업 환경의 표준으로 자리잡고 있다.
+
+[MCP — Model Context Protocol (Anthropic 주도)]
+- AI 시스템과 외부 도구, 데이터베이스, 데이터 소스 간 연결을 표준화
+- 개별 통합 개발 없이 다양한 데이터 소스에 안전하게 연결 가능
+- 수직 통합(에이전트 ↔ 도구) 담당
+
+[A2A — Agent-to-Agent Protocol (Google 주도)]
+- 2025년 4월 발표, 2025년 6월 Linux Foundation 기증, 2026년 초 v1.0 출시
+- AI 에이전트 간 표준화된 메시지 형식, 태스크 조율, 기능 탐색 지원
+- 2026년 중반 기준 AWS, Microsoft, Salesforce, SAP, IBM, ServiceNow 등
+  150개 이상 기업이 프로덕션 환경에 A2A 도입
+- 수평 통합(에이전트 ↔ 에이전트) 담당
+
+[거버넌스]
+- 2025년 12월, Linux Foundation 산하에 Agentic AI Foundation (AAIF) 설립
+  (OpenAI, Anthropic, Google, Microsoft, AWS, Block 공동 창립)
+  A2A와 MCP의 공식 관리 기구 역할
+
+[추천 아키텍처]
+- 도구 접근: MCP 사용
+- 크로스 벤더/크로스 조직 에이전트 조율: A2A 추가 적용
+
+[출처]
+- OneReach.ai: MCP vs A2A: Protocols for Multi-Agent Collaboration 2026
+  https://onereach.ai/blog/guide-choosing-mcp-vs-a2a-protocols/
+- Zylos Research: Agent-to-Agent Communication Protocols: A2A, MCP, and Multi-Agent Orchestration
+  https://zylos.ai/research/2026-05-16-agent-to-agent-communication-protocols-a2a-mcp/
+- DEV Community: MCP vs A2A: The Complete Guide to AI Agent Protocols in 2026
+  https://dev.to/pockit_tools/mcp-vs-a2a-the-complete-guide-to-ai-agent-protocols-in-2026-30li
+- NeoSalpha: ACP vs MCP vs A2A: The Complete Guide to AI Agent Protocols
+  https://neosalpha.com/blogs/ai-agent-protocols-acp-vs-mcp-vs-a2a/
+- TURION.AI: The AI Agent Protocol Stack: MCP, A2A & What Comes Next
+  https://turion.ai/blog/ai-agent-protocol-stack-2026/
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. 산업별 특화 에이전트
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+범용 AI 기술보다 산업별 도메인 지식으로 훈련된 특화 에이전트가 부상하고 있다.
+
+[산업별 적용 사례]
+- 의료: 환자 분류(triage), 예약 일정 관리, 진단 보조
+- 금융: 규제 보고 자동화, 사기 탐지, 리스크 모니터링
+- 제조: 생산 라인 모니터링, 공급망 최적화
+- 리테일: 재고 관리, 고객 경험 개인화
+- 소프트웨어 개발: 코드 생성·검토·테스트의 자동화 (agentic coding)
+
+[코딩 에이전트 특이 동향]
+- Anthropic의 2026 Agentic Coding Trends Report에 따르면, CLI 기반 AI 에이전트가
+  개발 방식을 IDE 클릭 중심에서 터미널 대화형 인터페이스로 전환시키고 있음
+
+[출처]
+- Softcolon: AI Agent Trends in 2026 Every Business Leader Must Know
+  https://softcolon.com/blogs/ai-agent-trends-in-2026-for-business-leaders/
+- Anthropic: 2026 Agentic Coding Trends Report
+  https://resources.anthropic.com/hubfs/2026%20Agentic%20Coding%20Trends%20Report.pdf
+- Google Cloud: AI agent trends 2026 report
+  https://cloud.google.com/resources/content/ai-agent-trends-2026
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. 안전성·정렬·인간 감독 (Safety, Alignment, Oversight)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+자율성 확대에 따른 안전 문제가 핵심 과제로 부상했다.
+
+[주요 리스크]
+- 자율성 확대로 인한 인간 개입 시점 축소 → 오류 확산 위험 증가
+- 에이전트가 감독을 회피하거나, 장기 계획을 실행하며 종료 저항을 보일 가능성
+- 멀티 에이전트 환경에서 개별 정렬이 시스템 수준 안전을 보장하지 않는 문제
+  (조율 프로토콜과 공유 규범(shared constitution) 필요)
+
+[현재 적용되는 안전 기술]
+- Constitutional AI: 가치 기반 행동 제약
+- RLHF 2.0 (Reinforcement Learning from Human Feedback): 보상 해킹 감소에 기여
+- Scalable Oversight: 인간 피드백의 확장 가능한 구조화
+- Human-in-the-loop: 리스크 관리를 위한 인간 의사결정 개입 유지
+
+[국제 보고서]
+- 2026년 국제 AI 안전 보고서(International AI Safety Report 2026):
+  AI 역량, 리스크, 안전장치를 종합 검토했으나, 대부분의 안전 조치의 실효성에
+  대한 증거 격차(evidence gap)가 여전히 크다고 지적
+
+[출처]
+- International AI Safety Report 2026
+  https://internationalaisafetyreport.org/publication/international-ai-safety-report-2026
+- Claude5 Hub: AI Safety 2026: Alignment Progress and Open Challenges
+  https://claude5.com/news/ai-safety-2026-alignment-progress-and-open-challenges
+- Global Policy Watch: International AI Safety Report 2026 Examines AI Capabilities, Risks, and Safeguards
+  https://www.globalpolicywatch.com/2026/02/international-ai-safety-report-2026-examines-ai-capabilities-risks-and-safeguards/
+- arxiv: The Oversight Game: Learning to Cooperatively Balance an AI Agent's Safety and Autonomy
+  https://arxiv.org/pdf/2510.26752
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+7. 요약 — 에이전트 발전의 4대 축
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ┌─────────────────────────────────────────────────────┐
+  │ 축          │ 현재 방향                              │
+  ├─────────────────────────────────────────────────────┤
+  │ 역할        │ 보조(Assistant) → 자율 운영자(Operator)│
+  │ 구조        │ 단일 → 멀티 에이전트 오케스트레이션    │
+  │ 통합        │ 커스텀 연동 → MCP/A2A 표준 프로토콜   │
+  │ 안전        │ 기능 중심 → 정렬·감독·거버넌스 병행   │
+  └─────────────────────────────────────────────────────┘
+
+================================================================
+  전체 출처 목록
+================================================================
+
+1. https://greenice.net/ai-agent-development-trends/
+2. https://softcolon.com/blogs/ai-agent-trends-in-2026-for-business-leaders/
+3. https://resources.anthropic.com/hubfs/2026%20Agentic%20Coding%20Trends%20Report.pdf
+4. https://www.salesmate.io/blog/future-of-ai-agents/
+5. https://muleai.io/blog/2026-03-02-ai-agent-trends-2026/
+6. https://cloud.google.com/resources/content/ai-agent-trends-2026
+7. https://theblue.ai/blog/ai-agents-2026/
+8. https://machinelearningmastery.com/7-agentic-ai-trends-to-watch-in-2026/
+9. https://www.firecrawl.dev/blog/agentic-ai-trends
+10. https://medium.com/autonomous-ai-journal/agentic-ai-in-2026-a-practical-roadmap-from-beginner-to-production-ready-systems-2f67f063913d
+11. https://www.novelvista.com/blogs/ai-and-ml/agentic-ai-roadmap
+12. https://acropolium.com/blog/agentic-ai-trends/
+13. https://symphony-solutions.com/insights/ai-agents-in-2026
+14. https://renard-digital.fr/blog/en/autonomous-ai-agents-2026-complete-guide-seo/
+15. https://www.generative.inc/agentic-ai-in-2026-how-ai-went-from-chatting-to-doing
+16. https://medium.com/@anicomanesh/from-generative-to-agentic-ai-a-roadmap-in-2026-8e553b43aeda
+17. https://onereach.ai/blog/guide-choosing-mcp-vs-a2a-protocols/
+18. https://zylos.ai/research/2026-05-16-agent-to-agent-communication-protocols-a2a-mcp/
+19. https://dev.to/pockit_tools/mcp-vs-a2a-the-complete-guide-to-ai-agent-protocols-in-2026-30li
+20. https://neomanex.com/posts/a2a-mcp-protocols
+21. https://www.ruh.ai/blogs/ai-agent-protocols-2026-complete-guide
+22. https://www.honestai.us/blogs/mcp-a2a-agent-protocols-how-enterprises-are-creating-truly-interoperable-ai-systems
+23. https://neosalpha.com/blogs/ai-agent-protocols-acp-vs-mcp-vs-a2a/
+24. https://turion.ai/blog/ai-agent-protocol-stack-2026/
+25. https://arxiv.org/pdf/2601.14512
+26. https://internationalaisafetyreport.org/publication/international-ai-safety-report-2026
+27. https://internationalaisafetyreport.org/publication/2026-report-extended-summary-policymakers
+28. https://claude5.com/news/ai-safety-2026-alignment-progress-and-open-challenges
+29. https://www.globalpolicywatch.com/2026/02/international-ai-safety-report-2026-examines-ai-capabilities-risks-and-safeguards/
+30. https://arxiv.org/pdf/2510.26752
+31. https://arxiv.org/pdf/2511.17621
+
+================================================================
