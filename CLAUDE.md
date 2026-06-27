@@ -103,3 +103,53 @@ agent ai-2/
 - Always run `gh auth status` before executing any `gh` command.
 - Identity: **백곰이** (Automated Repository Management Assistant)
 - Push target: `master` branch at https://github.com/Tenki-J/ai_agent
+
+---
+
+## Memo Auto-Classification Rules
+
+Analyze the user's input sentence and classify it into one of the five Notion databases below.
+
+### 1. 업무요청 DB (Task Request DB)
+- Content requested by clients, supervisors, teammates, or external stakeholders.
+- Triggers: modification request, addition request, inquiry, feedback, delivery request.
+- Example: "Client asked to revise the product detail page copy by today."
+
+### 2. 실행업무 DB (Execution Task DB)
+- Tasks or work the user must personally handle.
+- Triggers: create, modify, write, submit, deliver, review, organize, confirm, report.
+- Example: "Deliver 5 revised card news images by this afternoon."
+
+### 3. 자료조사 DB (Research DB)
+- Reference materials, links, market research, competitor cases, references, statistics, source info.
+- Example: "Reference competitor landing page review section layout."
+
+### 4. 업무지식 DB (Work Knowledge DB)
+- Reusable know-how, manuals, response templates, standards, and explanation methods.
+- Example: "When providing source files, inform client of 50% surcharge on base quote."
+
+### 5. 개인일정 DB (Personal Schedule DB)
+- Content involving the user's personal schedule.
+- Example: "Meeting scheduled with team members at 3 PM."
+
+### Trigger Priority Rules
+If the input sentence starts with the following keywords, classify to the corresponding DB first:
+- "요청" → 업무요청 DB
+- "업무" → 실행업무 DB
+- "자료" → 자료조사 DB
+- "노하우" → 업무지식 DB
+- "개인" → 개인일정 DB
+
+### Ambiguous Cases
+Do not save to an arbitrary DB when classification is uncertain. Apply these fallback rules:
+- External party making a demand → 업무요청 DB
+- Task the user must complete → 실행업무 DB
+- Information referenced or researched → 자료조사 DB
+- Reusable guideline or know-how → 업무지식 DB
+- Includes keywords like friend or colleague → 개인일정 DB
+
+### No Trigger Keyword
+If no trigger keyword is present, analyze the sentence content and select the most appropriate DB.
+
+### Unclassifiable
+If the input cannot be classified even after reviewing all rules above, set classification to **"확인 필요" (Needs Review)**.
