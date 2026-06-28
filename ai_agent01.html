@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Agent 01 — 프롬프트부터 CLI 환경까지</title>
+  <style>
+    :root {
+      --bg: #f8f9fa;
+      --sidebar-bg: #1e1e2e;
+      --sidebar-text: #cdd6f4;
+      --sidebar-active: #89b4fa;
+      --sidebar-hover: #313244;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --accent: #3b82f6;
+      --accent-light: #eff6ff;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --tag-basic: #10b981;
+      --tag-intro: #f59e0b;
+      --success: #22c55e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── 사이드바 ── */
+    #sidebar {
+      width: 260px;
+      min-width: 260px;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    #sidebar .logo {
+      padding: 24px 20px 16px;
+      border-bottom: 1px solid #313244;
+    }
+    #sidebar .logo h1 { font-size: 1rem; font-weight: 700; color: #89b4fa; }
+    #sidebar .logo p { font-size: 0.72rem; color: #6c7086; margin-top: 4px; }
+
+    #sidebar nav { padding: 12px 0; flex: 1; }
+
+    #sidebar nav a {
+      display: block;
+      padding: 9px 20px;
+      font-size: 0.82rem;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      transition: background 0.15s;
+      border-left: 3px solid transparent;
+    }
+    #sidebar nav a:hover { background: var(--sidebar-hover); }
+    #sidebar nav a.active {
+      background: #313244;
+      border-left-color: var(--sidebar-active);
+      color: var(--sidebar-active);
+      font-weight: 600;
+    }
+
+    #sidebar nav .section-label {
+      padding: 12px 20px 4px;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #6c7086;
+    }
+
+    /* ── 메인 콘텐츠 ── */
+    #main {
+      flex: 1;
+      padding: 40px 48px;
+      max-width: 960px;
+    }
+
+    /* 상단 배너 */
+    .page-header {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+      color: #fff;
+      border-radius: 12px;
+      padding: 32px 36px;
+      margin-bottom: 36px;
+    }
+    .page-header h1 { font-size: 1.6rem; font-weight: 700; }
+    .page-header p { font-size: 0.9rem; opacity: 0.85; margin-top: 6px; }
+
+    /* 빠른 실행 배너 */
+    .quick-cmd {
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+    .quick-cmd span { font-size: 0.75rem; color: #94a3b8; white-space: nowrap; }
+    .quick-cmd code {
+      font-family: 'Consolas', monospace;
+      font-size: 0.85rem;
+      color: #7dd3fc;
+      flex: 1;
+    }
+
+    /* 섹션 */
+    .week-section {
+      margin-bottom: 60px;
+      scroll-margin-top: 24px;
+    }
+
+    .week-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .week-title h2 { font-size: 1.25rem; font-weight: 700; }
+
+    .badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge-basic { background: #d1fae5; color: #065f46; }
+    .badge-intro { background: #fef3c7; color: #92400e; }
+
+    /* 카드 */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px 28px;
+      margin-bottom: 20px;
+    }
+    .card h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+      color: var(--accent);
+    }
+    .card h4 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin: 16px 0 8px;
+      color: #475569;
+    }
+    .card p, .card li {
+      font-size: 0.855rem;
+      line-height: 1.75;
+      color: var(--text);
+    }
+    .card ul, .card ol {
+      padding-left: 20px;
+      margin: 8px 0;
+    }
+    .card li { margin-bottom: 4px; }
+
+    /* 코드 블록 */
+    .code-block {
+      position: relative;
+      background: var(--code-bg);
+      border-radius: 8px;
+      margin: 12px 0;
+      overflow: hidden;
+    }
+    .code-block pre {
+      padding: 16px 20px;
+      font-family: 'Consolas', 'D2Coding', monospace;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      color: var(--code-text);
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #313244;
+      color: #cdd6f4;
+      border: none;
+      border-radius: 5px;
+      padding: 4px 10px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .copy-btn:hover { background: var(--accent); color: #fff; }
+    .copy-btn.copied { background: var(--success); color: #fff; }
+
+    /* 인라인 코드 */
+    code.inline {
+      background: #f1f5f9;
+      color: #0f172a;
+      font-family: 'Consolas', monospace;
+      font-size: 0.82em;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* 테이블 */
+    .tbl-wrap { overflow-x: auto; margin: 12px 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+    }
+    thead th {
+      background: #f1f5f9;
+      padding: 9px 14px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody td {
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: #f8fafc; }
+
+    /* 단계 태그 */
+    .step-tag {
+      display: inline-block;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-right: 6px;
+    }
+
+    /* 플로우 다이어그램 */
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin: 12px 0;
+      font-size: 0.8rem;
+    }
+    .flow-item {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .flow-arrow { color: #94a3b8; font-size: 1rem; }
+
+    /* 체크리스트 */
+    .checklist { list-style: none; padding: 0; margin: 10px 0; }
+    .checklist li {
+      padding: 5px 0 5px 24px;
+      position: relative;
+      font-size: 0.855rem;
+      line-height: 1.6;
+    }
+    .checklist li::before {
+      content: '□';
+      position: absolute;
+      left: 0;
+      color: #94a3b8;
+    }
+
+    /* 구분선 */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+    /* 하이라이트 박스 */
+    .info-box {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-top: 12px;
+    }
+    .info-box-blue { background: #eff6ff; color: #1e40af; }
+    .info-box-green { background: #f0fdf4; color: #166534; }
+    .info-box-yellow { background: #fef9c3; color: #854d0e; }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      #sidebar { display: none; }
+      #main { padding: 24px 20px; }
+    }
+
+    /* 스크롤바 */
+    #sidebar::-webkit-scrollbar { width: 4px; }
+    #sidebar::-webkit-scrollbar-track { background: transparent; }
+    #sidebar::-webkit-scrollbar-thumb { background: #45475a; border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<aside id="sidebar">
+  <div class="logo">
+    <h1>AI Agent 01</h1>
+    <p>프롬프트부터 CLI 환경까지</p>
+  </div>
+  <nav>
+    <div class="section-label">소개 (INTRO)</div>
+    <a href="#intro">INTRO — AI 에이전트 개념</a>
+
+    <div class="section-label">기초 (BASIC)</div>
+    <a href="#basic01">BASIC 01 — 메모리 & 파일 제어</a>
+    <a href="#basic02">BASIC 02 — 보안 & 환경 설정</a>
+    <a href="#basic03">BASIC 03 — 웹 & 브라우저 자동화</a>
+    <a href="#basic04">BASIC 04 — 세션 관리</a>
+    <a href="#basic05">BASIC 05 — 서브 에이전트 & 훅</a>
+    <a href="#basic06">BASIC 06 — MCP</a>
+    <a href="#basic07">BASIC 07 — 스킬 & 디스코드</a>
+    <a href="#basic08">BASIC 08 — 데스크톱 & CLI</a>
+    <a href="#summary">전체 실습 요약</a>
+  </nav>
+</aside>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<main id="main">
+
+  <!-- 헤더 -->
+  <div class="page-header">
+    <h1>AI 에이전트 1 — 프롬프트부터 CLI 환경까지</h1>
+    <p>에이전트 개념부터 MCP · 스킬 · 디스코드 자동화까지 · INTRO + BASIC 01~08</p>
+  </div>
+
+  <!-- 빠른 실행 -->
+  <div class="quick-cmd">
+    <span>⚡ 빠른 실행</span>
+    <code>claude --dangerously-skip-permissions</code>
+    <button class="copy-btn" onclick="copyCode(this, 'claude --dangerously-skip-permissions')">복사</button>
+  </div>
+
+
+  <!-- ══ INTRO ══ -->
+  <section class="week-section" id="intro">
+    <div class="week-title">
+      <span class="badge badge-intro">INTRO</span>
+      <h2>AI 에이전트 개념</h2>
+    </div>
+
+    <div class="card">
+      <h3>AI 에이전트란?</h3>
+      <p>질문에 답하는 것을 넘어 <strong>스스로 목표를 설정하고 계획하며 실행하는 자율 시스템</strong>입니다.</p>
+      <h4>4가지 핵심 능력</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li><strong>환경 인식</strong> — 파일·웹·API 탐색 및 정보 수집</li>
+        <li><strong>자율 판단</strong> — 데이터를 바탕으로 다음 행동 결정</li>
+        <li><strong>도구 활용</strong> — 코드 실행, 파일 편집, 외부 서비스 호출</li>
+        <li><strong>반복 개선</strong> — 결과 검증 후 목표 달성까지 자기 수정</li>
+      </ol>
+      <p class="info-box info-box-blue" style="margin-top:14px;">
+        💡 실사용 예: "매주 월요일 9시에 매출 데이터 분석 후 이메일 보고서 발송" → AI 에이전트가 전체 워크플로우를 자동 실행
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>일반 AI vs AI 에이전트 비교</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>구분</th><th>일반 챗봇</th><th>AI 에이전트</th></tr></thead>
+          <tbody>
+            <tr><td>역할</td><td>질문에 답변</td><td>목표를 실행</td></tr>
+            <tr><td>방식</td><td>즉각 응답</td><td>계획 → 실행 → 검토</td></tr>
+            <tr><td>도구 사용</td><td>제한적·없음</td><td>다중 도구 적극 활용</td></tr>
+            <tr><td>범위</td><td>단일 답변</td><td>멀티스텝 프로젝트</td></tr>
+            <tr><td>비유</td><td>잘 답하는 친구</td><td>일을 처리하는 비서</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>에이전트 핵심 워크플로우</h3>
+      <div class="flow">
+        <span class="flow-item">목표 입력</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">목표 이해</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">작업 계획</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">도구 선택</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">실행</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">결과 검증</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">수정</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">최종 결과</span>
+      </div>
+      <h4>실생활 예시: 제주도 여행 계획</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li>날짜 확인 → 날씨 검색 → 항공/숙소 조건 확인</li>
+        <li>관광지 후보 목록화 → 이동 경로 계산</li>
+        <li>여행 일정 작성 → 예산 요약</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h3>5가지 핵심 구성 요소</h3>
+      <ul style="font-size:0.855rem; line-height:2; padding-left:20px;">
+        <li><strong>① 목표 인식</strong> — 주제·대상·필요 자료·형식·근거 파악</li>
+        <li><strong>② 계획 수립</strong> — 목표를 서브태스크로 분해 (시장조사 → 트렌드 → 사례 → 구조 → 정제)</li>
+        <li><strong>③ 도구 사용</strong> — 적절한 도구 선택·실행 (웹검색·캘린더·이메일·문서·코드·이미지 생성)</li>
+        <li><strong>④ 실행 및 관찰</strong> — 실행 후 충분성 평가, 출처 신뢰도 판단</li>
+        <li><strong>⑤ 반복 개선</strong> — 첫 결과에서 멈추지 않고 수정 사이클로 정제</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>주요 CLI 에이전트 비교</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>도구</th><th>개발사</th><th>특기</th></tr></thead>
+          <tbody>
+            <tr><td>GPT CLI (Codex)</td><td>OpenAI</td><td>코드 생성, 파일 편집</td></tr>
+            <tr><td>Claude Code</td><td>Anthropic</td><td>파일 편집, CLAUDE.md 특화</td></tr>
+            <tr><td>Gemini CLI</td><td>Google</td><td>웹 검색, Google 생태계 연동</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>CLI 에이전트 설치</h3>
+      <h4>사전 요구사항</h4>
+      <p>Windows: Winget (기본 패키지 매니저) / macOS: Homebrew (curl로 설치)</p>
+
+      <h4>Windows PowerShell</h4>
+      <div class="code-block">
+        <pre>winget install Git.Git
+winget install OpenJS.NodeJS</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'winget install Git.Git\nwinget install OpenJS.NodeJS')">복사</button>
+      </div>
+
+      <h4>macOS Terminal</h4>
+      <div class="code-block">
+        <pre>/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+brew install node</pre>
+        <button class="copy-btn" onclick="copyCode(this, '/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"\nbrew install node')">복사</button>
+      </div>
+
+      <h4>설치 확인</h4>
+      <div class="code-block">
+        <pre>git --version
+node --version
+npm --version</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'git --version\nnode --version\nnpm --version')">복사</button>
+      </div>
+
+      <h4>전역 에이전트 설치</h4>
+      <div class="code-block">
+        <pre>npm install -g @google/gemini-cli
+npm install -g @anthropic-ai/claude-code
+npm install -g @openai/codex</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'npm install -g @google/gemini-cli\nnpm install -g @anthropic-ai/claude-code\nnpm install -g @openai/codex')">복사</button>
+      </div>
+
+      <h4>버전 확인</h4>
+      <div class="code-block">
+        <pre>gemini --version
+claude --version
+codex --version</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'gemini --version\nclaude --version\ncodex --version')">복사</button>
+      </div>
+
+      <h4>VS Code 환경 구성</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li>code.visualstudio.com에서 다운로드·설치</li>
+        <li>작업 폴더 생성 (예: <code class="inline">C:\ai-agent</code>)</li>
+        <li>VS Code에서 폴더 열기</li>
+        <li>터미널 열기: <code class="inline">Ctrl + `</code></li>
+        <li><code class="inline">claude --dangerously-skip-permissions</code> 실행</li>
+      </ol>
+      <h4>'claude is not recognized' 오류 해결</h4>
+      <div class="code-block">
+        <pre>$env:PATH += ";$env:APPDATA\npm"</pre>
+        <button class="copy-btn" onclick="copyCode(this, '$env:PATH += \";$env:APPDATA\\npm\"')">복사</button>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══ BASIC 01 ══ -->
+  <section class="week-section" id="basic01">
+    <div class="week-title">
+      <span class="badge badge-basic">BASIC</span>
+      <h2>01 — 에이전트 메모리 & 파일 제어</h2>
+    </div>
+
+    <div class="card">
+      <h3>CLAUDE.md 파일 시스템</h3>
+      <p><strong>에이전트 정체성·규칙을 정의하는 자동 로드 지시 파일</strong></p>
+      <h4>위치</h4>
+      <ul>
+        <li>프로젝트 루트: <code class="inline">.claude/CLAUDE.md</code></li>
+        <li>홈 디렉토리: <code class="inline">~/.claude/CLAUDE.md</code></li>
+      </ul>
+      <h4>자동 메모리 기능 (MEMORY.md)</h4>
+      <ul>
+        <li>에이전트가 중요한 맥락을 자동 저장</li>
+        <li>강제 저장: "이걸 기억해줘"</li>
+        <li>보기: <code class="inline">/memory</code> 명령</li>
+      </ul>
+      <h4>초기화</h4>
+      <div class="code-block">
+        <pre>/init</pre>
+        <button class="copy-btn" onclick="copyCode(this, '/init')">복사</button>
+      </div>
+      <p style="font-size:0.82rem; color:var(--text-muted);">폴더 분석 후 CLAUDE.md 자동 생성</p>
+
+      <h4>히스토리 초기화</h4>
+      <div class="code-block">
+        <pre>/clear</pre>
+        <button class="copy-btn" onclick="copyCode(this, '/clear')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>파일 조작: READ / WRITE / EDIT</h3>
+      <h4>READ — 파일 분석</h4>
+      <ul>
+        <li>텍스트 (.txt, .py)</li>
+        <li>이미지 (.jpg, .png)</li>
+        <li>PDF (최대 100페이지, 20MB)</li>
+      </ul>
+      <div class="code-block">
+        <pre>~/path/file 읽어서 적절한 이름으로 수정해줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, '~/path/file 읽어서 적절한 이름으로 수정해줘')">복사</button>
+      </div>
+
+      <h4>WRITE — 새 파일 생성</h4>
+      <p>파일 전체 생성·덮어쓰기</p>
+      <div class="code-block">
+        <pre>hello.txt 파일 만들고 자기소개서 작성해줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'hello.txt 파일 만들고 자기소개서 작성해줘')">복사</button>
+      </div>
+
+      <h4>EDIT — 부분 수정</h4>
+      <p>전체 교체 없이 특정 부분만 수정</p>
+      <div class="code-block">
+        <pre>hello.txt 첫 줄을 '수정된 첫 줄'로 바꿔줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, "hello.txt 첫 줄을 '수정된 첫 줄'로 바꿔줘")">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>터미널 명령어 제어</h3>
+      <h4>Bash (Linux, macOS)</h4>
+      <p>텍스트 처리 강점, 간결한 문법</p>
+
+      <h4>PowerShell (Windows)</h4>
+      <p>.NET 프레임워크 기반, 객체 지향 데이터 처리, 시스템 자동화 최적화</p>
+
+      <h4>폴더 조작 실습</h4>
+      <div class="code-block">
+        <pre>work 폴더 만들고 그 안에 docs 폴더 제작해
+note.txt를 docs폴더로 이동
+파일명을 backup.txt로 변경
+크롬 실행 후 00계정 선택한 후 특정 페이지 열어줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'work 폴더 만들고 그 안에 docs 폴더 제작해\nnote.txt를 docs폴더로 이동\n파일명을 backup.txt로 변경\n크롬 실행 후 00계정 선택한 후 특정 페이지 열어줘')">복사</button>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══ BASIC 02 ══ -->
+  <section class="week-section" id="basic02">
+    <div class="week-title">
+      <span class="badge badge-basic">BASIC</span>
+      <h2>02 — 보안 & 환경 설정</h2>
+    </div>
+
+    <div class="card">
+      <h3>파일 접근 & 데이터 프라이버시</h3>
+      <p><strong>기본 쓰기 제한:</strong> 시작 디렉토리 및 하위만 접근 가능</p>
+      <h4>권장 개인정보 설정</h4>
+      <p><code class="inline">claude.ai/settings/data-privacy-controls</code> 접속</p>
+      <ul>
+        <li>위치 메타데이터 수집 비활성화</li>
+        <li>데이터 개선 프로그램 거부</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>settings.json 설정</h3>
+      <h4>위치 (우선순위 순)</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li><code class="inline">~/.claude/settings.json</code> (PC 전체 적용)</li>
+        <li><code class="inline">.claude/settings.json</code> (프로젝트 팀 공유)</li>
+        <li><code class="inline">.claude/settings.local.json</code> (개인 전용)</li>
+      </ol>
+      <h4>권한 규칙 문법</h4>
+      <div class="code-block">
+        <pre>{
+  "permissions": {
+    "rules": [
+      {"deny": "Bash(rm -rf *)"},
+      {"allow": "Bash(npm run *)"},
+      {"deny": "Read(./.env)"}
+    ]
+  }
+}</pre>
+        <button class="copy-btn" onclick="copyCode(this, '{\n  \"permissions\": {\n    \"rules\": [\n      {\"deny\": \"Bash(rm -rf *)\"},\n      {\"allow\": \"Bash(npm run *)\"},\n      {\"deny\": \"Read(./.env)\"}\n    ]\n  }\n}')">복사</button>
+      </div>
+      <p style="font-size:0.82rem; color:var(--text-muted);">평가 순서: deny → ask → allow</p>
+
+      <h4>규칙 형식 예시</h4>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>형식</th><th>의미</th></tr></thead>
+          <tbody>
+            <tr><td><code class="inline">Tool</code></td><td>도구 전체 차단/허용</td></tr>
+            <tr><td><code class="inline">Tool(specifier)</code></td><td>특정 조건만 적용</td></tr>
+            <tr><td><code class="inline">Bash(npm run *)</code></td><td>npm 명령만 허용</td></tr>
+            <tr><td><code class="inline">Read(./.env)</code></td><td>.env 읽기 차단</td></tr>
+            <tr><td><code class="inline">Bash(rm -rf *)</code></td><td>재귀 삭제 차단</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>권한 모드 (Shift+Tab으로 전환)</h3>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li><strong>일반 모드</strong> (기본) — 각 작업 전 확인 요청</li>
+        <li><strong>자동 승인 편집</strong> — 편집 자동 승인, 터미널만 확인</li>
+        <li><strong>플랜 모드</strong> — 제안된 옵션 중에서 선택</li>
+      </ol>
+
+      <h4>YOLO 모드 (모든 권한 자동 승인)</h4>
+      <div class="code-block">
+        <pre>claude --dangerously-skip-permissions</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'claude --dangerously-skip-permissions')">복사</button>
+      </div>
+      <p style="font-size:0.82rem; color:var(--text-muted);">종료: <code class="inline">/exit</code> 또는 <code class="inline">Ctrl+C</code> 두 번</p>
+    </div>
+
+    <div class="card">
+      <h3>모델 선택 (/model)</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>모델</th><th>특징</th></tr></thead>
+          <tbody>
+            <tr><td>Haiku 4.5</td><td>가장 빠름, 단순 작업</td></tr>
+            <tr><td>Sonnet 4.6</td><td>기본 추천, 코딩·자동화</td></tr>
+            <tr><td>Opus 4.5</td><td>최고 성능, 깊은 추론</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══ BASIC 03 ══ -->
+  <section class="week-section" id="basic03">
+    <div class="week-title">
+      <span class="badge badge-basic">BASIC</span>
+      <h2>03 — 웹 & 브라우저 자동화</h2>
+    </div>
+
+    <div class="card">
+      <h3>웹 검색 도구</h3>
+      <p>웹 검색 시 자동 트리거 — 별도 명령 불필요</p>
+      <h4>실습 프롬프트</h4>
+      <div class="code-block">
+        <pre>오늘 기준 최근 7일 이내에 발행된 AI 에이전트 관련 기사를 웹조사해줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, '오늘 기준 최근 7일 이내에 발행된 AI 에이전트 관련 기사를 웹조사해줘')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Chrome 브라우저 자동화 (Beta)</h3>
+      <h4>설치 단계</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li>Chrome 웹스토어에서 'Claude' 확장 설치</li>
+        <li>터미널: <code class="inline">claude --chrome</code> 실행</li>
+        <li><code class="inline">/mcp</code> → <code class="inline">chrome for claude</code> 선택 → Enable</li>
+      </ol>
+      <h4>주요 기능</h4>
+      <ul>
+        <li>라이브 디버깅</li>
+        <li>디자인 검증</li>
+        <li>데이터 추출</li>
+        <li>폼 테스트</li>
+      </ul>
+      <h4>실습 프롬프트</h4>
+      <div class="code-block">
+        <pre>페이지의 챌린지를 하나씩 클릭해서 직접 실행해보기
+구글에서 'AI 에이전트 트렌드 2025'를 검색하고 상위 3개 결과 요약해줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, "페이지의 챌린지를 하나씩 클릭해서 직접 실행해보기\n구글에서 'AI 에이전트 트렌드 2025'를 검색하고 상위 3개 결과 요약해줘")">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>할 일 관리 (Todos)</h3>
+      <p>자동 관리 워크플로우 상태: <code class="inline">pending</code> → <code class="inline">in_progress</code> → <code class="inline">completed</code></p>
+      <h4>멀티스텝 파일 처리 실습</h4>
+      <div class="code-block">
+        <pre>todo 리스트를 세워서 아래 작업을 순서대로 진행해줘.
+1) practice 폴더 생성, 그 안에 docs·images·code 서브폴더 생성
+2) docs/readme.txt 생성 후 '문서 보관 폴더입니다. 생성일: [오늘 날짜]' 기록
+3) 완료 후 폴더 구조를 트리 형태로 출력</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'todo 리스트를 세워서 아래 작업을 순서대로 진행해줘.\n1) practice 폴더 생성, 그 안에 docs·images·code 서브폴더 생성\n2) docs/readme.txt 생성 후 \'문서 보관 폴더입니다. 생성일: [오늘 날짜]\' 기록\n3) 완료 후 폴더 구조를 트리 형태로 출력')">복사</button>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══ BASIC 04 ══ -->
+  <section class="week-section" id="basic04">
+    <div class="week-title">
+      <span class="badge badge-basic">BASIC</span>
+      <h2>04 — 세션 관리</h2>
+    </div>
+
+    <div class="card">
+      <h3>이전 세션 재개</h3>
+      <h4>즉시 이어서 시작</h4>
+      <div class="code-block">
+        <pre>claude --continue</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'claude --continue')">복사</button>
+      </div>
+      <h4>세션 목록 보고 선택</h4>
+      <div class="code-block">
+        <pre>claude --resume</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'claude --resume')">복사</button>
+      </div>
+      <h4>세션 중 전환</h4>
+      <div class="code-block">
+        <pre>/resume</pre>
+        <button class="copy-btn" onclick="copyCode(this, '/resume')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>세션 이름 지정 & 되감기</h3>
+      <h4>세션 이름 설정</h4>
+      <div class="code-block">
+        <pre>/rename 여행계획</pre>
+        <button class="copy-btn" onclick="copyCode(this, '/rename 여행계획')">복사</button>
+      </div>
+      <h4>되감기 (Rewind)</h4>
+      <div class="code-block">
+        <pre>/rewind</pre>
+        <button class="copy-btn" onclick="copyCode(this, '/rewind')">복사</button>
+      </div>
+      <p style="font-size:0.82rem; color:var(--text-muted);">단축키: Esc × 2 · 채팅만 롤백(파일 변경 유지) 또는 전체 복원 선택</p>
+    </div>
+
+    <div class="card">
+      <h3>컨텍스트 메모리 관리</h3>
+      <h4>사용량 확인 (시각적 그리드)</h4>
+      <div class="code-block">
+        <pre>/context</pre>
+        <button class="copy-btn" onclick="copyCode(this, '/context')">복사</button>
+      </div>
+      <h4>압축·요약</h4>
+      <div class="code-block">
+        <pre>/compact 파스타 레시피 내용 중심으로</pre>
+        <button class="copy-btn" onclick="copyCode(this, '/compact 파스타 레시피 내용 중심으로')">복사</button>
+      </div>
+      <h4>전체 초기화</h4>
+      <div class="code-block">
+        <pre>/clear</pre>
+        <button class="copy-btn" onclick="copyCode(this, '/clear')">복사</button>
+      </div>
+      <h4>자동 압축 설정 (기본값 95%에서 트리거)</h4>
+      <div class="code-block">
+        <pre>"env": {
+  "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": 80
+}</pre>
+        <button class="copy-btn" onclick="copyCode(this, '"env": {\n  "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": 80\n}')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>포그라운드 vs 백그라운드 실행</h3>
+      <h4>포그라운드 (기본값)</h4>
+      <ul>
+        <li>Claude가 완료까지 대기</li>
+        <li>실행 중 다른 프롬프트 입력 불가</li>
+        <li>기본 타임아웃: 2분</li>
+      </ul>
+      <h4>백그라운드 (Ctrl+B)</h4>
+      <ul>
+        <li>비동기 실행, 태스크 ID 반환</li>
+        <li>동시에 다른 프롬프트 입력 가능</li>
+        <li>적합한 작업: npm install, docker build, 서버</li>
+      </ul>
+      <h4>태스크 관리</h4>
+      <div class="code-block">
+        <pre>/tasks          # 목록·관리
+Ctrl + T        # 태스크 보기 전환
+Ctrl + F        # 전체 강제 종료</pre>
+        <button class="copy-btn" onclick="copyCode(this, '/tasks\nCtrl + T\nCtrl + F')">복사</button>
+      </div>
+      <h4>타임아웃 늘리기 (5시간)</h4>
+      <div class="code-block">
+        <pre>"bash": {
+  "timeout": 18000000
+}</pre>
+        <button class="copy-btn" onclick="copyCode(this, '"bash": {\n  "timeout": 18000000\n}')">복사</button>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══ BASIC 05 ══ -->
+  <section class="week-section" id="basic05">
+    <div class="week-title">
+      <span class="badge badge-basic">BASIC</span>
+      <h2>05 — 서브 에이전트 & 훅</h2>
+    </div>
+
+    <div class="card">
+      <h3>서브 에이전트 구조</h3>
+      <p>별도 컨텍스트에서 실행되는 <strong>역할 특화 자율 에이전트</strong></p>
+      <h4>파일 위치</h4>
+      <ul>
+        <li>프로젝트: <code class="inline">.claude/agents/</code></li>
+        <li>PC 전체: <code class="inline">~/.claude/agents/</code></li>
+      </ul>
+      <h4>설정 파일 예시</h4>
+      <div class="code-block">
+        <pre>---
+name: report-writer
+description: '보고서를 작성합니다'
+tools: Read, Write, Bash
+model: sonnet
+---</pre>
+        <button class="copy-btn" onclick="copyCode(this, '---\nname: report-writer\ndescription: \'보고서를 작성합니다\'\ntools: Read, Write, Bash\nmodel: sonnet\n---')">복사</button>
+      </div>
+      <h4>CLI로 생성</h4>
+      <div class="code-block">
+        <pre>/agents
+→ Create new agent
+→ Generate with Claude</pre>
+        <button class="copy-btn" onclick="copyCode(this, '/agents')">복사</button>
+      </div>
+      <h4>병렬 실행 예시</h4>
+      <div class="code-block">
+        <pre>시장 조사 · 데이터 정리 · 보고서 초안을 별도 에이전트로 동시에 진행해줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, '시장 조사 · 데이터 정리 · 보고서 초안을 별도 에이전트로 동시에 진행해줘')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Claude 에이전트 팀</h3>
+      <p><strong>구조:</strong> 리더 1명 + 팀원 3~5명이 별도 컨텍스트에서 운영</p>
+      <h4>팀 간 통신 방식</h4>
+      <p>직접 메시지 + 공유 태스크 목록</p>
+      <h4>활용 사례</h4>
+      <ul>
+        <li>병렬 코드 리뷰</li>
+        <li>경쟁 가설 디버깅</li>
+        <li>대규모 모듈 리팩터링</li>
+      </ul>
+      <h4>서브 에이전트 vs 팀 비교</h4>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>구분</th><th>서브 에이전트</th><th>팀</th></tr></thead>
+          <tbody>
+            <tr><td>통신 방향</td><td>단방향 (메인 → 서브)</td><td>다방향 (멤버 간 협업)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h4>활성화</h4>
+      <div class="code-block">
+        <pre>"env": {
+  "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": 1
+}</pre>
+        <button class="copy-btn" onclick="copyCode(this, '"env": {\n  "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": 1\n}')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>훅(Hooks) 시스템 — 18개 이벤트 포인트</h3>
+      <p>특정 워크플로우 시점에 스크립트를 자동 실행하는 시스템</p>
+
+      <h4>차단 이벤트 (exit code 2 사용 가능)</h4>
+      <ul>
+        <li><code class="inline">PreToolUse</code> — 도구 실행 전</li>
+        <li><code class="inline">UserPromptSubmit</code> — 프롬프트 처리 전</li>
+        <li><code class="inline">PermissionRequest</code> — 권한 요청 시점</li>
+        <li><code class="inline">Stop</code> — 응답 완료 전</li>
+        <li><code class="inline">SubagentStop</code> — 서브 에이전트 종료</li>
+        <li><code class="inline">TeammateIdle</code> — 팀원 유휴 상태 전</li>
+        <li><code class="inline">TaskCompleted</code> — 태스크 완료 표시 전</li>
+        <li><code class="inline">ConfigChange</code> — 설정 파일 변경</li>
+        <li><code class="inline">WorktreeCreate</code> — 워크트리 생성 전</li>
+      </ul>
+
+      <h4>관찰 이벤트 (차단 불가)</h4>
+      <ul>
+        <li>SessionStart / SessionEnd</li>
+        <li>InstructionsLoaded</li>
+        <li>PostToolUse / PostToolUseFailure</li>
+        <li>Notification</li>
+        <li>SubagentStart</li>
+        <li>PreCompact</li>
+        <li>WorktreeRemove</li>
+      </ul>
+
+      <h4>실행 흐름</h4>
+      <div class="flow">
+        <span class="flow-item">User Prompt</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">UserPromptSubmit Hook</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">PreToolUse Hook</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">Tool 실행</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">PostToolUse Hook</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">Stop Hook</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">응답</span>
+      </div>
+
+      <h4>실습 예시 — PC 알림 훅</h4>
+      <div class="code-block">
+        <pre>settings.json에 Claude 응답이 완료될 때마다 BurntToast로 PC 알림이 뜨는 Hook 추가해줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'settings.json에 Claude 응답이 완료될 때마다 BurntToast로 PC 알림이 뜨는 Hook 추가해줘')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>MS Office 연동</h3>
+      <h4>요구사항</h4>
+      <ul>
+        <li>Microsoft 365 구독</li>
+        <li>Claude Pro/Max 계정</li>
+        <li>API 키 불필요</li>
+      </ul>
+      <h4>설치 단계</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li>PowerPoint/Excel 열기</li>
+        <li>홈 메뉴 → 추가 기능 (오른쪽)</li>
+        <li>"Claude" 검색</li>
+        <li>"Claude for Microsoft 365" 선택</li>
+        <li>오른쪽 패널에서 claude.ai 계정으로 로그인</li>
+      </ol>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══ BASIC 06 ══ -->
+  <section class="week-section" id="basic06">
+    <div class="week-title">
+      <span class="badge badge-basic">BASIC</span>
+      <h2>06 — MCP (Model Context Protocol)</h2>
+    </div>
+
+    <div class="card">
+      <h3>MCP란?</h3>
+      <p>AI를 외부 서비스와 연결하는 <strong>표준 프로토콜 (USB-C와 같은 개방형 표준)</strong></p>
+      <div class="flow">
+        <span class="flow-item">MCP 없이</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">복사 → 붙여넣기 → 수동 관리</span>
+      </div>
+      <div class="flow" style="margin-top:8px;">
+        <span class="flow-item">MCP 있으면</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-item">"Notion 정리해줘" → Claude가 직접 처리</span>
+      </div>
+      <p style="margin-top:10px; font-size:0.82rem; color:var(--text-muted);">지원: Claude, ChatGPT, Cursor (공개 표준)</p>
+    </div>
+
+    <div class="card">
+      <h3>MCP 설치 방법</h3>
+      <h4>HTTP 방식 (원격 권장)</h4>
+      <div class="code-block">
+        <pre>claude mcp add --transport http [name] [URL]</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'claude mcp add --transport http [name] [URL]')">복사</button>
+      </div>
+      <h4>Stdio 방식 (로컬 PC 실행)</h4>
+      <div class="code-block">
+        <pre>claude mcp add --transport stdio [name] -- npx ...</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'claude mcp add --transport stdio [name] -- npx ...')">복사</button>
+      </div>
+      <h4>관리 명령어</h4>
+      <div class="code-block">
+        <pre>claude mcp list
+claude mcp remove [name]
+/mcp          # 세션 내 관리</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'claude mcp list\nclaude mcp remove [name]\n/mcp')">복사</button>
+      </div>
+      <p style="font-size:0.82rem; color:var(--text-muted);">범위: local (현재 프로젝트) | project (팀 공유) | user (PC 전체)</p>
+    </div>
+
+    <div class="card">
+      <h3>Trivago MCP — 호텔 검색</h3>
+      <h4>등록</h4>
+      <div class="code-block">
+        <pre>claude mcp add --transport http trivago https://mcp.trivago.com/mcp</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'claude mcp add --transport http trivago https://mcp.trivago.com/mcp')">복사</button>
+      </div>
+      <h4>주요 기능</h4>
+      <ul>
+        <li>국가/도시/날짜/인원 기준 검색</li>
+        <li>가격·위치·후기 비교</li>
+        <li>예산·평점·시설 필터</li>
+        <li>인증 불필요 — 즉시 사용 가능</li>
+      </ul>
+      <h4>실습 프롬프트</h4>
+      <div class="code-block">
+        <pre>한국 강남 지역, 3/28~29 1박, 2명 기준으로 숙소를 찾아줘
+예산 10만원 이하로 조건을 바꿔서 다시 찾아줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, '한국 강남 지역, 3/28~29 1박, 2명 기준으로 숙소를 찾아줘\n예산 10만원 이하로 조건을 바꿔서 다시 찾아줘')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Canva MCP — 디자인 생성</h3>
+      <h4>등록</h4>
+      <div class="code-block">
+        <pre>claude mcp add --transport http canva https://mcp.canva.com/mcp</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'claude mcp add --transport http canva https://mcp.canva.com/mcp')">복사</button>
+      </div>
+      <h4>인증 단계</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li><code class="inline">claude --dangerously-skip-permissions</code> 실행</li>
+        <li><code class="inline">/mcp</code> → canva 선택 → Authenticate</li>
+        <li>브라우저에서 Canva 로그인</li>
+      </ol>
+      <h4>상태 확인</h4>
+      <div class="code-block">
+        <pre>/mcp</pre>
+        <button class="copy-btn" onclick="copyCode(this, '/mcp')">복사</button>
+      </div>
+      <h4>실습 프롬프트</h4>
+      <div class="code-block">
+        <pre>AI 에이전트 소개 프레젠테이션을 Canva로 만들고 PDF로 내보내줘
+첫 번째 슬라이드 제목을 "AI 시대의 업무 혁신"으로 바꿔줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'AI 에이전트 소개 프레젠테이션을 Canva로 만들고 PDF로 내보내줘\n첫 번째 슬라이드 제목을 \"AI 시대의 업무 혁신\"으로 바꿔줘')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Wix MCP — 웹사이트 구축</h3>
+      <h4>등록</h4>
+      <div class="code-block">
+        <pre>claude mcp add --transport http wix https://mcp.wix.com/mcp</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'claude mcp add --transport http wix https://mcp.wix.com/mcp')">복사</button>
+      </div>
+      <p style="font-size:0.82rem; color:var(--text-muted);">인증: 구글 계정으로 로그인 (별도 가입 불필요)</p>
+      <h4>실습 프롬프트</h4>
+      <div class="code-block">
+        <pre>F/W 의류를 판매하는 쇼핑몰 컨셉의 사이트를 만들어서 배포해줘
+메인 페이지에 세일 배너를 추가해줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'F/W 의류를 판매하는 쇼핑몰 컨셉의 사이트를 만들어서 배포해줘\n메인 페이지에 세일 배너를 추가해줘')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Notion MCP</h3>
+      <h4>등록 (최초 1회)</h4>
+      <div class="code-block">
+        <pre>claude mcp add --transport http notion https://mcp.notion.com/mcp</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'claude mcp add --transport http notion https://mcp.notion.com/mcp')">복사</button>
+      </div>
+      <h4>인증 단계</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li><code class="inline">claude --dangerously-skip-permissions</code> 실행</li>
+        <li><code class="inline">/mcp</code> → notion 선택 → Authenticate</li>
+        <li>브라우저에서 Notion 로그인</li>
+      </ol>
+      <p style="font-size:0.82rem; color:var(--text-muted);">초기 설정 후 자동 연결 유지 — 재실행 시 인증 불필요</p>
+      <h4>실습 프롬프트</h4>
+      <div class="code-block">
+        <pre>프로젝트 회의록 페이지를 Notion에 만들어줘
+DB에 오늘 작업 항목 3개 추가해줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, '프로젝트 회의록 페이지를 Notion에 만들어줘\nDB에 오늘 작업 항목 3개 추가해줘')">복사</button>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══ BASIC 07 ══ -->
+  <section class="week-section" id="basic07">
+    <div class="week-title">
+      <span class="badge badge-basic">BASIC</span>
+      <h2>07 — 스킬 & 디스코드 플러그인</h2>
+    </div>
+
+    <div class="card">
+      <h3>스킬(Skills) 개념</h3>
+      <p><strong>모듈식 기능 확장</strong> — 커스텀 슬래시 명령어 추가</p>
+      <h4>파일 위치</h4>
+      <ul>
+        <li>프로젝트: <code class="inline">.claude/skills/&lt;name&gt;/SKILL.md</code></li>
+        <li>PC 전체: <code class="inline">~/.claude/skills/&lt;name&gt;/SKILL.md</code></li>
+      </ul>
+      <h4>호출 방법</h4>
+      <div class="code-block">
+        <pre>/skill-name
+/skill-name [arguments]</pre>
+        <button class="copy-btn" onclick="copyCode(this, '/skill-name\n/skill-name [arguments]')">복사</button>
+      </div>
+      <h4>기본 스킬</h4>
+      <p><code class="inline">/simplify</code> · <code class="inline">/batch</code> · <code class="inline">/debug</code> · <code class="inline">/loop</code></p>
+    </div>
+
+    <div class="card">
+      <h3>SKILL.md 구조</h3>
+      <div class="code-block">
+        <pre>---
+description: 스킬 설명
+---
+# Instructions
+마크다운으로 작성된 Claude 지시문</pre>
+        <button class="copy-btn" onclick="copyCode(this, '---\ndescription: 스킬 설명\n---\n# Instructions\n마크다운으로 작성된 Claude 지시문')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Pillow — 카드뉴스 이미지 생성</h3>
+      <h4>설치</h4>
+      <div class="code-block">
+        <pre>pip install pillow</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'pip install pillow')">복사</button>
+      </div>
+      <h4>주요 함수</h4>
+      <ul>
+        <li><code class="inline">Image.new()</code> — 캔버스 생성</li>
+        <li><code class="inline">ImageDraw</code> — 도형·텍스트 그리기</li>
+        <li><code class="inline">img.resize()</code> — 크기 조정</li>
+        <li><code class="inline">img.crop()</code> — 자르기</li>
+        <li><code class="inline">img.save()</code> — PNG/JPG 출력</li>
+      </ul>
+      <h4>실습 요청</h4>
+      <div class="code-block">
+        <pre>pillow로 1080x1080 카드뉴스 이미지 만들어줘.
+배경 남색, 제목 "AI가 바꾸는 세상" 흰색 굵게 중앙,
+본문 "2줄 설명" 회색 작게, 하단 로고 영역 포함</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'pillow로 1080x1080 카드뉴스 이미지 만들어줘.\n배경 남색, 제목 "AI가 바꾸는 세상" 흰색 굵게 중앙,\n본문 "2줄 설명" 회색 작게, 하단 로고 영역 포함')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>스킬 제작 워크플로우</h3>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li>원하는 기능 설명 ("카드뉴스 만들고 싶어")</li>
+        <li>라이브러리 조사 요청 ("Python으로 만들려면 어떤 라이브러리?")</li>
+        <li>코드 구현 요청</li>
+        <li>스킬 변환 요청 ("이걸 /cardnews 스킬로 만들어줘")</li>
+        <li>인수 활성화 ("배경색, 제목, 본문을 인수로 받도록")</li>
+      </ol>
+      <h4>스킬 사용 예시</h4>
+      <div class="code-block">
+        <pre>/cardnews 배경=남색 제목="AI가 바꾸는 세상" 본문="설명 텍스트"
+/cardnews 배경=흰색 글자=검정 제목="오늘의 뉴스" 사이즈=1080x1350
+/cardnews 배경=#FF6B35 제목="SALE 50%" 리사이즈=썸네일</pre>
+        <button class="copy-btn" onclick="copyCode(this, '/cardnews 배경=남색 제목="AI가 바꾸는 세상" 본문="설명 텍스트"\n/cardnews 배경=흰색 글자=검정 제목="오늘의 뉴스" 사이즈=1080x1350\n/cardnews 배경=#FF6B35 제목="SALE 50%" 리사이즈=썸네일')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>디스코드 봇 설정</h3>
+      <h4><span class="step-tag">Step 1</span> 봇 생성</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li><code class="inline">discord.com/developers/applications</code> 접속</li>
+        <li>New Application 클릭</li>
+        <li>Bot 탭 → Reset Token → 복사</li>
+      </ol>
+      <h4><span class="step-tag">Step 2</span> Intent 활성화</h4>
+      <p>Privileged Gateway Intents → Message Content Intent ✓</p>
+
+      <h4><span class="step-tag">Step 3</span> OAuth2 설정</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li>OAuth2 탭 → URL Generator</li>
+        <li>"bot" 체크</li>
+        <li>"Read/Send Messages" 체크</li>
+        <li>생성된 URL 복사 → 서버에 봇 초대</li>
+      </ol>
+      <p style="font-size:0.82rem; color:var(--text-muted);">토큰 관리: .env에 저장 (절대 하드코딩 금지)</p>
+    </div>
+
+    <div class="card">
+      <h3>디스코드 플러그인 설치</h3>
+      <h4><span class="step-tag">Step 1</span> 플러그인 채널로 실행</h4>
+      <div class="code-block">
+        <pre>claude --channels plugin:discord@claude-plugins-official --dangerously-skip-permissions</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'claude --channels plugin:discord@claude-plugins-official --dangerously-skip-permissions')">복사</button>
+      </div>
+      <h4><span class="step-tag">Step 2</span> 플러그인 설치 (최초 1회)</h4>
+      <div class="code-block">
+        <pre>/plugin install discord@claude-plugins-official
+/reload-plugin</pre>
+        <button class="copy-btn" onclick="copyCode(this, '/plugin install discord@claude-plugins-official\n/reload-plugin')">복사</button>
+      </div>
+      <h4><span class="step-tag">Step 3</span> MCP에서 활성화</h4>
+      <div class="code-block">
+        <pre>/mcp
+→ discord 선택
+→ Enable</pre>
+        <button class="copy-btn" onclick="copyCode(this, '/mcp')">복사</button>
+      </div>
+      <h4><span class="step-tag">Step 4</span> 토큰 저장</h4>
+      <div class="code-block">
+        <pre>echo "DISCORD_BOT_TOKEN=YOUR_TOKEN" > ~/.claude/channels/discord/.env</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'echo "DISCORD_BOT_TOKEN=YOUR_TOKEN" > ~/.claude/channels/discord/.env')">복사</button>
+      </div>
+      <h4><span class="step-tag">Step 5</span> DM 페어링</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li>봇에게 DM 전송 → 페어링 코드 수신</li>
+        <li>Claude 터미널에 코드 붙여넣기</li>
+      </ol>
+      <h4><span class="step-tag">Step 6</span> 서버 채널 등록</h4>
+      <ol style="padding-left:20px; font-size:0.855rem; line-height:2;">
+        <li>Discord: 설정 → 고급 → 개발자 모드 ✓</li>
+        <li>채널 우클릭 → 채널 ID 복사</li>
+        <li>Claude에서 요청:</li>
+      </ol>
+      <div class="code-block">
+        <pre>/discord:access group add &lt;CHANNEL_ID&gt;</pre>
+        <button class="copy-btn" onclick="copyCode(this, '/discord:access group add <CHANNEL_ID>')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>MCP vs 플러그인 비교</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>기능</th><th>MCP (stdio)</th><th>플러그인 (Official)</th></tr></thead>
+          <tbody>
+            <tr><td>설치</td><td>git clone + 빌드</td><td>자동 설치</td></tr>
+            <tr><td>사용 가능 도구</td><td>2개 (읽기/보내기)</td><td>5개 (reply/fetch/react/edit/download)</td></tr>
+            <tr><td>멘션 필터</td><td>없음</td><td>있음</td></tr>
+            <tr><td>파일 첨부</td><td>없음</td><td>있음</td></tr>
+            <tr><td>이모지 반응</td><td>없음</td><td>있음</td></tr>
+            <tr><td>채널 접근</td><td>DM 제한</td><td>DM + 서버 (access.json)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="info-box info-box-green" style="margin-top:12px;">
+        결론: 플러그인 = 공식 지원 + 더 많은 도구 + 실시간 = MCP보다 우수
+      </p>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ══ BASIC 08 ══ -->
+  <section class="week-section" id="basic08">
+    <div class="week-title">
+      <span class="badge badge-basic">BASIC</span>
+      <h2>08 — 데스크톱 & CLI 자동화</h2>
+    </div>
+
+    <div class="card">
+      <h3>Claude 도구 비교</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>도구</th><th>특징</th><th>적합한 작업</th></tr></thead>
+          <tbody>
+            <tr><td>Claude Desktop (GUI)</td><td>대화형 워크스페이스, 프로젝트 관리, 파일 드래그앤드롭</td><td>시각적 워크플로우 확인, 비개발자, 파일 작업</td></tr>
+            <tr><td>Desktop Claude Code (탭)</td><td>Desktop 내에서 Claude Code 실행, CLI와 세션 공유</td><td>Desktop과 CLI 통합 작업</td></tr>
+            <tr><td>Claude Cowork (GUI 에이전트)</td><td>폴더 기반 태스크 관리, 계획 검증, Google Drive/Gmail 연동</td><td>시각적 에이전트 관리</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>CLI vs 데스크톱 — 선택 기준</h3>
+      <h4>Claude Code CLI 적합</h4>
+      <ul>
+        <li>자동화·스크립팅</li>
+        <li>훅, 스킬, MCP 체인</li>
+        <li>도구 파이프라인 구성</li>
+        <li>개발자 중심 워크플로우</li>
+      </ul>
+      <h4>Claude Desktop 적합</h4>
+      <ul>
+        <li>시각적 워크플로우 확인</li>
+        <li>비개발자 접근성</li>
+        <li>파일 드래그앤드롭</li>
+        <li>대화형 작업</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>GitHub CLI 설정</h3>
+      <h4><span class="step-tag">Step 1</span> 계정 생성</h4>
+      <p><code class="inline">github.com</code> (무료 플랜)</p>
+
+      <h4><span class="step-tag">Step 2</span> gh 설치</h4>
+      <div class="code-block">
+        <pre># Windows
+winget install GitHub.cli
+
+# macOS
+brew install gh</pre>
+        <button class="copy-btn" onclick="copyCode(this, '# Windows\nwinget install GitHub.cli\n\n# macOS\nbrew install gh')">복사</button>
+      </div>
+
+      <h4><span class="step-tag">Step 3</span> 인증</h4>
+      <div class="code-block">
+        <pre>gh auth login
+gh auth status</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'gh auth login\ngh auth status')">복사</button>
+      </div>
+
+      <h4>스킬 제작 요청</h4>
+      <div class="code-block">
+        <pre>gh cli로 내 저장소 목록과 최근 PR 상태를 정리해주는 스킬을 만들어줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'gh cli로 내 저장소 목록과 최근 PR 상태를 정리해주는 스킬을 만들어줘')">복사</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Gemini CLI 설정</h3>
+      <h4>설치</h4>
+      <div class="code-block">
+        <pre>npm install -g @google/gemini-cli</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'npm install -g @google/gemini-cli')">복사</button>
+      </div>
+      <h4>기본 사용법</h4>
+      <div class="code-block">
+        <pre>gemini -p "질문이나 지시사항"</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'gemini -p "질문이나 지시사항"')">복사</button>
+      </div>
+      <h4>스킬 제작 요청</h4>
+      <div class="code-block">
+        <pre>bash로 gemini -p를 호출해서 내 질문에 Gemini가 답하는 스킬을 만들어줘</pre>
+        <button class="copy-btn" onclick="copyCode(this, 'bash로 gemini -p를 호출해서 내 질문에 Gemini가 답하는 스킬을 만들어줘')">복사</button>
+      </div>
+      <p style="font-size:0.82rem; color:var(--text-muted);">결과: <code class="inline">/ask-gemini</code> 스킬로 Claude가 Gemini에 자문 가능</p>
+    </div>
+
+    <div class="card">
+      <h3>도구 조합 — 멀티 파이프라인</h3>
+      <p>Claude + GitHub CLI + Gemini CLI = 통합 자동화 워크플로우</p>
+      <div class="flow" style="flex-direction:column; align-items:flex-start;">
+        <span class="flow-item">GitHub CLI — 저장소 상태 조회</span>
+        <span class="flow-arrow" style="padding-left:20px;">↓</span>
+        <span class="flow-item">Gemini CLI — 외부 AI 관점 제공</span>
+        <span class="flow-arrow" style="padding-left:20px;">↓</span>
+        <span class="flow-item">Claude — 결과 종합 및 Skill 자동화 실행</span>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- 전체 실습 요약 -->
+  <section class="week-section" id="summary">
+    <div class="week-title">
+      <h2>전체 실습 요약</h2>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>섹션</th><th>실습 내용</th></tr></thead>
+        <tbody>
+          <tr><td>파일 제어</td><td>폴더 생성, 파일 이동·복사·삭제</td></tr>
+          <tr><td>권한 설정</td><td>rm 차단, 거부 테스트, settings.json 검증</td></tr>
+          <tr><td>웹 검색</td><td>최근 7일 AI 에이전트 기사 조사</td></tr>
+          <tr><td>Chrome 자동화</td><td>페이지 탐색, 데이터 추출</td></tr>
+          <tr><td>Todos</td><td>폴더·파일 생성 멀티스텝 워크플로우</td></tr>
+          <tr><td>세션 관리</td><td>이전 작업 재개, 되감기 테스트</td></tr>
+          <tr><td>컨텍스트</td><td>메모리 확인, 압축, 자동 압축 조정</td></tr>
+          <tr><td>백그라운드</td><td>Ctrl+B로 긴 스크립트 실행, 태스크 관리</td></tr>
+          <tr><td>서브 에이전트</td><td>역할 기반 에이전트 생성, 병렬 실행</td></tr>
+          <tr><td>훅</td><td>알림 훅 생성, 삭제 차단 테스트</td></tr>
+          <tr><td>MCP - Trivago</td><td>예산 기준 숙소 검색</td></tr>
+          <tr><td>MCP - Canva</td><td>슬라이드 덱 디자인, PDF 출력</td></tr>
+          <tr><td>MCP - Wix</td><td>이커머스 사이트 구축·배포</td></tr>
+          <tr><td>MCP - Notion</td><td>페이지 생성, DB 항목 추가</td></tr>
+          <tr><td>스킬 - Pillow</td><td>카드뉴스 이미지 생성</td></tr>
+          <tr><td>스킬 - GitHub</td><td>저장소·PR 상태 요약</td></tr>
+          <tr><td>스킬 - Gemini</td><td>외부 AI 자문 기능</td></tr>
+          <tr><td>Discord</td><td>DM 페어링, 채널 등록, 봇 간 대화</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // 코드 복사
+  function copyCode(btn, text) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '복사됨 ✓';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = '복사';
+        btn.classList.remove('copied');
+      }, 1800);
+    }).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      btn.textContent = '복사됨 ✓';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = '복사';
+        btn.classList.remove('copied');
+      }, 1800);
+    });
+  }
+
+  // 사이드바 활성화 (IntersectionObserver)
+  const sections = document.querySelectorAll('.week-section[id]');
+  const navLinks = document.querySelectorAll('#sidebar nav a');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(a => a.classList.remove('active'));
+        const active = document.querySelector(`#sidebar nav a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
